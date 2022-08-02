@@ -14,25 +14,25 @@ cotik = open('cotik.jpg', 'rb')
 #Админ меню
 def keyboard_admin(message):
     startKBoard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard=True)
-    btn1 = types.KeyboardButton(text = "Профиль")
     btn2 = types.KeyboardButton(text = "Список песен")
     btn3 = types.KeyboardButton(text = "Оставить отзыв")
     btn4 = types.KeyboardButton(text = "Показать комментарии")
     btn5 = types.KeyboardButton(text = "Вывести запросы")
     btn6 = types.KeyboardButton(text = "Создать событие")
     btn7 = types.KeyboardButton(text = "Показать ближайшие события")
-    startKBoard.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7)
+    btn1 = types.KeyboardButton(text = "Настройки")
+    startKBoard.add(btn2, btn3, btn4, btn5, btn6, btn7, btn1)
     time.sleep(1)
     bot.send_message(message.chat.id, "Открываю главное меню", reply_markup=startKBoard)
 
 #Пользовательское меню 
 def keyboard_user(message):
     startKBoard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard=True)
-    btn1 = types.KeyboardButton(text = "Профиль")
     btn2 = types.KeyboardButton(text = "Список песен")
     btn3 = types.KeyboardButton(text = "Оставить отзыв")
     btn4 = types.KeyboardButton(text = "Показать ближайшие события")
-    startKBoard.add(btn1, btn2, btn3, btn4)
+    btn1 = types.KeyboardButton(text = "Настройки")
+    startKBoard.add(btn2, btn3, btn4, btn1)
     bot.send_message(message.chat.id, "Открываю меню", reply_markup=startKBoard)
 
 #Да/Нет клавиатура
@@ -52,10 +52,8 @@ def keyboard_profile_submenu(message, text):
         btn1 = types.KeyboardButton(text = "Подключить рассылку")
     else:
         btn1 = types.KeyboardButton(text = "Отключить рассылку")
-    btn2 = types.KeyboardButton(text = "Показать мой профиль")
-    btn3 = types.KeyboardButton(text = "Показать отчёт")
-    btn4 = types.KeyboardButton(text = "Назад")
-    keyboard.add(btn1, btn2, btn3, btn4)
+    btn2 = types.KeyboardButton(text = "Назад")
+    keyboard.add(btn1, btn2)
     bot.send_message(message.chat.id, text, reply_markup = keyboard)
 
 #Внесение данных в таблицу с запросами
