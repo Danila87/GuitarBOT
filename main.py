@@ -52,12 +52,12 @@ def start (message):
 
 def user_registration_newsletter(message, id_user, first_name, last_name, nickname):
     if message.text == "Да":
-        bot.send_message(message.chat.id, "Успешно!\nОтказаться от рассылки можно в меню в разделе 'Профиль'")
+        bot.send_message(message.chat.id, "Успешно!\nОтказаться от рассылки можно в меню в разделе 'Настройки'")
         db_users_insert(id_user = id_user, first_name = first_name, last_name = last_name, nickname = nickname, event_status = 1)
         time.sleep(1)
         keyboard_user(message)
     else:
-        bot.send_message(message.chat.id, "Успешно!\nПодписаться на рассылку можно в меню в разделе 'Профиль'")
+        bot.send_message(message.chat.id, "Успешно!\nПодписаться на рассылку можно в меню в разделе 'Настройки'")
         db_users_insert(id_user = id_user, first_name = first_name, last_name = last_name, nickname = nickname, event_status = 0)
         time.sleep(1)
         keyboard_user(message)
@@ -79,7 +79,7 @@ def admin_menu(message):
 
 
 #Подменю
-@bot.message_handler(func = lambda message: message.text == "Вывести запросы" or message.text == "Назад" or message.text == "Профиль")
+@bot.message_handler(func = lambda message: message.text == "Вывести запросы" or message.text == "Назад" or message.text == "Настройки")
 def submenu(message):
 
     if message.text == "Вывести запросы":
@@ -103,7 +103,7 @@ def submenu(message):
         else:
             keyboard_user(message)
 
-    if message.text == "Профиль":
+    if message.text == "Настройки":
         keyboard_profile_submenu(message, text = "Открываю")
 
 
