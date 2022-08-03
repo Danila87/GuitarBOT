@@ -1,5 +1,4 @@
 from ast import Lambda
-from curses import keyname
 from email import message
 from email.message import Message
 from glob import escape
@@ -39,6 +38,7 @@ def start (message):
     first_name = message.from_user.first_name
     last_name = message.from_user.last_name
     nickname = message.from_user.username
+
     row = db_user_registration_select(id_user = id_user)
 
     if row == 1:
@@ -113,6 +113,8 @@ def main_menu(message):
 
     keyboard_user(message)
 
+
+#Подключение и отключение рассылки
 @bot.message_handler(func=lambda message: message.text == "Подключить рассылку" or message.text == "Отключить рассылку")
 def user_newsletter_edit(message):
 
@@ -127,6 +129,18 @@ def user_newsletter_edit(message):
         time.sleep(1)
         bot.send_message(message.chat.id, "Рассылка отключена!")
 
+
+#Вывод данных пользователя
+@bot.message_handler(func=lambda message: message.text == "Показать мои данные")
+def user_profile(message):
+    rows = db_user_select_by_id(message.from_user.id)
+
+    if rows[4] == 0:
+        Newsletter_subscription = "Отключена"
+    else:
+        Newsletter_subscription = "Подключена"
+
+    bot.send_message(message.chat.id, "Ваш ID: " + "*"+str(rows[0])+"*" + "\n" + "Ваше имя: " + str(rows[1]) + "\n" + "Ваша фамилия: " + str(rows[2]) + "\n" + "Ваш никнейм: " + str(rows[3]) + "\n" + "Подписка на рассылку: " + Newsletter_subscription, parse_mode="Markdown")
 
 #Список песен
 @bot.message_handler(func=lambda message: message.text == 'Список песен')

@@ -47,13 +47,13 @@ def keyboard_yes_no(message):
 def keyboard_profile_submenu(message, text):
     rows = db_user_select_by_id(id_user = message.from_user.id)
     keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard = True)
-    print(rows[4])
+    btn1 = types.KeyboardButton(text = "Показать мои данные")
     if rows[4] == 0:
-        btn1 = types.KeyboardButton(text = "Подключить рассылку")
+        btn2 = types.KeyboardButton(text = "Подключить рассылку")
     else:
-        btn1 = types.KeyboardButton(text = "Отключить рассылку")
-    btn2 = types.KeyboardButton(text = "Назад")
-    keyboard.add(btn1, btn2)
+        btn2 = types.KeyboardButton(text = "Отключить рассылку")
+    btn3 = types.KeyboardButton(text = "Назад")
+    keyboard.add(btn1, btn2, btn3)
     bot.send_message(message.chat.id, text, reply_markup = keyboard)
 
 #Внесение данных в таблицу с запросами
