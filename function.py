@@ -52,18 +52,29 @@ def keyboard_setting_submenu(message, text):
     rows = db_user_select_by_id(id_user = message.from_user.id)
     keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard = True)
     btn1 = types.KeyboardButton(text = "Показать мои данные")
+    btn4 = types.KeyboardButton(text = "Назад")
     if rows[4] == 0:
         btn2 = types.KeyboardButton(text = "Подключить рассылку")
     else:
         btn2 = types.KeyboardButton(text = "Отключить рассылку")
-    btn3 = types.KeyboardButton(text = "Назад")
-    keyboard.add(btn1, btn2, btn3)
-    bot.send_message(message.chat.id, text, reply_markup = keyboard)
+    if rows[6] == 1:
+        btn3 = types.KeyboardButton(text = "Назначить администратора")
+        keyboard.add(btn1, btn2, btn3, btn4)
+        bot.send_message(message.chat.id, text, reply_markup = keyboard)
+    else:
+        keyboard.add(btn1, btn2, btn4)
+        bot.send_message(message.chat.id, text, reply_markup = keyboard)
 
 
 
 
 #ФУНКЦИИ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ
+
+#Получение всех пользователей
+def db_all_users():
+    cursor.execute("SELECT * FROM Users LEFT OUTER JOIN Role ON Users.Id_role = Role.Id_role")
+    rows = cursor.fetchall()
+    return rows
 
 #Все айди чаты согласные на рассылку
 def db_user_select():
@@ -73,13 +84,13 @@ def db_user_select():
 
 #Конкретный человек по айди
 def db_user_select_by_id(id_user:int):
-    cursor.execute("SELECT * FROM Users WHERE id_user = ?", (id_user,))
+    cursor.execute("SELECT * FROM Users LEFT OUTER JOIN Role ON Users.Id_role = Role.Id_role WHERE id_user = ?", (id_user,))
     rows = cursor.fetchone()
     return rows
 
 #Внесение данных о новом пользователе
 def db_user_insert(id_user: int, first_name: str, last_name:str, nickname: str, event_status: int):
-    cursor.execute('INSERT INTO Users (id_user, First_name, Last_name, Nickname, Event_status) VALUES (?,?,?,?,?)', (id_user, first_name, last_name, nickname, event_status))
+    cursor.execute('INSERT INTO Users (id_user, First_name, Last_name, Nickname, Event_status, Id_role) VALUES (?,?,?,?,?,3)', (id_user, first_name, last_name, nickname, event_status))
     conn.commit()
 
 #Проверка на регистрацию пользователя
@@ -94,8 +105,12 @@ def db_user_newsletter_edit(status: int, id_user: int):
     cursor.execute("UPDATE Users SET Event_status = ? WHERE id_user = ?", (status, id_user))
     conn.commit()
 
+def db_user_upgrade(id_user:int):
+    cursor.execute("UPDATE Users SET Id_role = 2 WHERE id_user = ?", (id_user,))
+    conn.commit()
 
 
+    
 #ВСЕ ФУНКЦИИ РАБОТЫ С ОТЗЫВАМИ
 
 #Вставка отзывов

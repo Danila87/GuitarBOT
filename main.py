@@ -16,7 +16,7 @@ from datetime import date
 #Служебные данные для бота
 token = "5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU"
 bot = telebot.TeleBot(token)
-
+garold = open('garold.jpg', 'rb')
 #Айди администора
 admin_id = 798854480
 
@@ -67,11 +67,11 @@ def user_registration_newsletter(message, id_user, first_name, last_name, nickna
 @bot.message_handler(func = lambda message: message.text == 'Админ меню')
 def admin_menu(message):
 
-    global admin_id
+    rows = db_user_select_by_id(message.from_user.id)
     bot.send_message(message.chat.id, "Проверяю данные...")
     time.sleep(1.5)
 
-    if message.from_user.id == admin_id:
+    if rows[6] == 3 or rows [6] == 2:
         keyboard_admin(message)
     else:
         bot.send_message(message.chat.id, "В доступе отказано.")
@@ -82,8 +82,9 @@ def admin_menu(message):
 @bot.message_handler(func = lambda message: message.text == "Вывести запросы" or message.text == "Назад" or message.text == "Настройки")
 def submenu(message):
 
+    rows = db_user_select_by_id(message.from_user.id)
     if message.text == "Вывести запросы":
-        if message.from_user.id == admin_id:
+        if rows[6] == 1 or rows [6] == 2:
             KeyBoard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard = True)
             btn1 = types.KeyboardButton(text = "За день")
             btn2 = types.KeyboardButton(text = "За месяц")
@@ -98,7 +99,7 @@ def submenu(message):
             error(message = message)
 
     if message.text == "Назад":
-        if message.from_user.id == admin_id:
+        if rows[6] == 1 or rows [6] == 2:
             keyboard_admin(message)
         else:
             keyboard_user(message)
@@ -113,6 +114,29 @@ def main_menu(message):
 
     keyboard_user(message)
 
+#Назначение администратора
+@bot.message_handler(func=lambda message: message.text == "Назначить администратора")
+def appoint_as_administrator_start(message):
+
+    sent = bot.send_message(message.chat.id, "Введите Id пользователя, которого хотите назначить администратором")
+    bot.register_next_step_handler(sent, appoint_as_administrator_end)
+
+def appoint_as_administrator_end(message):
+
+    id_user = message.text
+    rows = db_user_select_by_id(id_user =  id_user)
+
+    bot.send_message(message.chat.id, "Проверяю пользователя " + rows[3])
+    time.sleep(1.5)
+    if rows[6] == 3 or rows [6] == 2 or rows[6] == 1:
+        db_user_upgrade(id_user = id_user)
+        bot.send_message(message.chat.id, "Назначаю пользователя " + rows[3] + " администратором.")
+        time.sleep(1.5)
+        bot.send_message(message.chat.id, "Права повышены!")
+        bot.send_photo(message.chat.id, garold)
+        bot.send_message(rows[0], "Поздравляем " + rows[3] +", вы назначены администратором! Введите 'Админ меню', чтобы открыть меню администратора.")
+    else:
+        bot.send_message(message.chat.id, "Данный пользователь уже администратор.")
 
 #Подключение и отключение рассылки
 @bot.message_handler(func=lambda message: message.text == "Подключить рассылку" or message.text == "Отключить рассылку")
@@ -140,7 +164,7 @@ def user_profile_slow(message):
     else:
         newsletter_subscription = "Подключена"
 
-    bot.send_message(message.chat.id, "Ваш ID: " + "*"+str(rows[0])+"*" + "\n" + "Ваше имя: " + str(rows[1]) + "\n" + "Ваша фамилия: " + str(rows[2]) + "\n" + "Ваш никнейм: " + str(rows[3]) + "\n" + "Подписка на рассылку: " + newsletter_subscription, parse_mode="Markdown")
+    bot.send_message(message.chat.id, "Ваш ID: " + "*"+str(rows[0])+"*" + "\n" + "Ваше имя: " + str(rows[1]) + "\n" + "Ваша фамилия: " + str(rows[2]) + "\n" + "Ваш никнейм: " + str(rows[3]) + "\n" + "Ваш статус: " + rows [7] + "\n" + "Подписка на рассылку: " + newsletter_subscription, parse_mode="Markdown")
 
 
 #Оставить отзыв
@@ -162,7 +186,9 @@ def review_save(message):
 @bot.message_handler(func = lambda message: message.text == 'Показать отзывы')
 def review_show(message):
 
-    if message.from_user.id == admin_id:
+    rows = db_user_select_by_id(message.from_user.id)
+
+    if rows[6] == 1:
         review_list = []
         count = 0
         for i in db_review_select():
@@ -183,7 +209,9 @@ def requests_by_date(message):
 
     requests_list = []
 
-    if message.from_user.id == admin_id:
+    rows = db_user_select_by_id(message.from_user.id)
+
+    if rows[6] == 1 or rows [6] == 2:
 
         if message.text == "За всё время":
             row = len(db_requests_count())
@@ -244,9 +272,14 @@ def requests_by_date(message):
 @bot.message_handler(func=lambda message: message.text == 'Выбрать месяц')
 def requests_select_date(message):
 
-    chat_id = message.chat.id
-    sent = bot.send_message(chat_id, 'Введите месяц')
-    bot.register_next_step_handler(sent, requests_select_date_show)
+    rows = db_user_select_by_id(message.from_user.id)
+
+    if rows[6] == 1 or rows [6] == 2:
+        chat_id = message.chat.id
+        sent = bot.send_message(chat_id, 'Введите месяц')
+        bot.register_next_step_handler(sent, requests_select_date_show)
+    else:
+        error(message = message)
 
 def requests_select_date_show(message):
 
@@ -269,8 +302,13 @@ def requests_select_date_show(message):
 #Отчёт по запросам за выбранный период
 @bot.message_handler(func=lambda message : message.text == 'Отчёт за период')
 def request_select_date_between(message):
-    sent = bot.send_message(message.chat.id, "Введите начальную дату в формате '2022-01-01'")
-    bot.register_next_step_handler(sent, date_between_start)
+    rows = db_user_select_by_id(message.from_user.id)
+
+    if rows[6] == 1 or rows [6] == 2:
+        sent = bot.send_message(message.chat.id, "Введите начальную дату в формате '2022-01-01'")
+        bot.register_next_step_handler(sent, date_between_start)
+    else:
+        error(message = message)
 
 def date_between_start(message):
    sent = bot.send_message(message.chat.id, "Введите конечную дату в формате '2022-01-01'")
@@ -300,15 +338,21 @@ def date_between_end(message, start_date):
 @bot.message_handler(func=lambda message: message.text == "Создать событие")
 def event_create_start(message):
 
-    keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard=True)
-    btn = []
-    btn1 = types.KeyboardButton(text = "Назад")
-    for i in db_types_events():
-        btn = types.KeyboardButton(text=i[0])
-        keyboard.add(btn)
-    keyboard.add(btn1)
-    sent = bot.send_message(message.chat.id, "Выберите тип события.", reply_markup = keyboard)
-    bot.register_next_step_handler(sent, date_event)
+    rows = db_user_select_by_id(message.from_user.id)
+
+    if rows[6] == 1 or rows [6] == 2:
+
+        keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard=True)
+        btn = []
+        btn1 = types.KeyboardButton(text = "Назад")
+        for i in db_types_events():
+            btn = types.KeyboardButton(text=i[0])
+            keyboard.add(btn)
+        keyboard.add(btn1)
+        sent = bot.send_message(message.chat.id, "Выберите тип события.", reply_markup = keyboard)
+        bot.register_next_step_handler(sent, date_event)
+    else:
+        error(message = message)
 
 def date_event(message):
 
