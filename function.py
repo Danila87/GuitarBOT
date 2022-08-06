@@ -47,7 +47,7 @@ def keyboard_yes_no(message):
     keyboard.add(btn1, btn2)
     return keyboard
 
-#Подменю профиля
+#Подменю настроек
 def keyboard_setting_submenu(message, text):
     rows = db_user_select_by_id(id_user = message.from_user.id)
     keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard = True)
@@ -58,15 +58,26 @@ def keyboard_setting_submenu(message, text):
     else:
         btn2 = types.KeyboardButton(text = "Отключить рассылку")
     if rows[6] == 1:
-        btn3 = types.KeyboardButton(text = "Назначить администратора")
+        btn3 = types.KeyboardButton(text = "Администраторы")
         keyboard.add(btn1, btn2, btn3, btn4)
         bot.send_message(message.chat.id, text, reply_markup = keyboard)
     else:
         keyboard.add(btn1, btn2, btn4)
         bot.send_message(message.chat.id, text, reply_markup = keyboard)
 
-
-
+#Подменю "Администраторы"
+def keyboard_admin_edit_submenu(message):
+    rows = db_user_select_by_id(id_user = message.from_user.id)
+    if rows[6] == 1:
+        keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard = True)
+        btn1 = types.KeyboardButton(text = "Назад")
+        btn2 = types.KeyboardButton(text = "Назначить администратором")
+        btn3 = types.KeyboardButton(text = "Убрать администратора")
+        btn4 = types.KeyboardButton(text = "Показать всех администраторов")
+        keyboard.add(btn2, btn3, btn4, btn1)
+        bot.send_message(message.chat.id, "Открываю", reply_markup = keyboard)
+    else:
+        error(message = message)
 
 #ФУНКЦИИ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ
 
@@ -105,8 +116,9 @@ def db_user_newsletter_edit(status: int, id_user: int):
     cursor.execute("UPDATE Users SET Event_status = ? WHERE id_user = ?", (status, id_user))
     conn.commit()
 
-def db_user_upgrade(id_user:int):
-    cursor.execute("UPDATE Users SET Id_role = 2 WHERE id_user = ?", (id_user,))
+#Изменение администраторов
+def db_user_upgrade(id_user:int, status):
+    cursor.execute("UPDATE Users SET Id_role = ? WHERE id_user = ?", (status, id_user))
     conn.commit()
 
 

@@ -114,8 +114,14 @@ def main_menu(message):
 
     keyboard_user(message)
 
+#Подменю "Администраторы"
+@bot.message_handler(func=lambda message: message.text == "Администраторы")
+def admin_edit_submenu(message):
+
+    keyboard_admin_edit_submenu(message)
+
 #Назначение администратора
-@bot.message_handler(func=lambda message: message.text == "Назначить администратора")
+@bot.message_handler(func=lambda message: message.text == "Назначить администратором")
 def appoint_as_administrator_start(message):
 
     sent = bot.send_message(message.chat.id, "Введите Id пользователя, которого хотите назначить администратором")
@@ -128,15 +134,44 @@ def appoint_as_administrator_end(message):
 
     bot.send_message(message.chat.id, "Проверяю пользователя " + rows[3])
     time.sleep(1.5)
-    if rows[6] == 3 or rows [6] == 2 or rows[6] == 1:
-        db_user_upgrade(id_user = id_user)
+    if rows[6] == 3 or rows[6] == None:
+        db_user_upgrade(id_user = id_user, status = 2)
         bot.send_message(message.chat.id, "Назначаю пользователя " + rows[3] + " администратором.")
         time.sleep(1.5)
         bot.send_message(message.chat.id, "Права повышены!")
-        bot.send_photo(message.chat.id, garold)
+        bot.send_photo(rows[0], garold)
         bot.send_message(rows[0], "Поздравляем " + rows[3] +", вы назначены администратором! Введите 'Админ меню', чтобы открыть меню администратора.")
     else:
         bot.send_message(message.chat.id, "Данный пользователь уже администратор.")
+
+@bot.message_handler(func=lambda message: message.text == "Убрать администратора")
+
+def appoint_as_administrator_start(message):
+
+    sent = bot.send_message(message.chat.id, "Введите Id пользователя, которого хотите убрать с поста администратора")
+    bot.register_next_step_handler(sent, appoint_as_administrator_end)
+
+def appoint_as_administrator_end(message):
+
+    keyboard = types.InlineKeyboardMarkup()
+    btn1 = types.InlineKeyboardButton("Администратор", url='https://t.me/Danila877')
+    keyboard.add(btn1)
+    
+    id_user = message.text
+    rows = db_user_select_by_id(id_user = id_user)
+
+    bot.send_message(message.chat.id, "Проверяю пользователя " + rows[3])
+    time.sleep(1.5)
+    if rows[6] == 2:
+        db_user_upgrade(id_user = id_user, status = 3)
+        bot.send_message(message.chat.id, "Понижаю пользователя  " + rows[3] + " .")
+        time.sleep(1.5)
+        bot.send_message(message.chat.id, "Права понижены!")
+        bot.send_photo(rows[0], garold)
+        bot.send_message(rows[0], "Уважаемый/ая " + rows[3] +", у вас забрали права администратора! Вы можете обратиться к разработчику для выяснения причин.", reply_markup = keyboard)
+    else:
+        bot.send_message(message.chat.id, "Данный пользователь не администратор.")
+
 
 #Подключение и отключение рассылки
 @bot.message_handler(func=lambda message: message.text == "Подключить рассылку" or message.text == "Отключить рассылку")
