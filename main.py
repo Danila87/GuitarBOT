@@ -123,29 +123,35 @@ def admin_edit_submenu(message):
 @bot.message_handler(func=lambda message: message.text == "Назначить администратором")
 def appoint_as_administrator_start(message):
 
-    sent = bot.send_message(message.chat.id, "Введите Id пользователя, которого хотите назначить администратором")
+    sent = bot.send_message(message.chat.id, "Введите Id пользователя, с которым будете назначить администратором")
     bot.register_next_step_handler(sent, appoint_as_administrator_end)
 
 def appoint_as_administrator_end(message):
 
     id_user = message.text
-    rows = db_user_select_by_id(id_user =  id_user)
 
-    bot.send_message(message.chat.id, "Проверяю пользователя " + rows[3])
-    time.sleep(1.5)
-    if rows[6] == 3 or rows[6] == None:
-        db_user_upgrade(id_user = id_user, status = 2)
-        bot.send_message(message.chat.id, "Назначаю пользователя " + rows[3] + " администратором.")
-        time.sleep(1.5)
-        bot.send_message(message.chat.id, "Права повышены!")
-        try:
-            bot.send_photo(rows[0], garold)
-        except:
-            bot.send_message(message.chat.id, "Возникла ошибка из-за которой вы не получите мем :(")
-        bot.send_message(rows[0], "Поздравляем " + rows[3] +", вы назначены администратором! Введите 'Админ меню', чтобы открыть меню администратора.")
-    else:
-        bot.send_message(message.chat.id, "Данный пользователь уже администратор.")
+    try:
+        rows = db_user_select_by_id(id_user =  id_user)
 
+        bot.send_message(message.chat.id, "Проверяю пользователя " + rows[3])
+        time.sleep(1)
+        if rows[6] == 3 or rows[6] == None:
+            db_user_upgrade(id_user = id_user, status = 2)
+            bot.send_message(message.chat.id, "Назначаю пользователя " + rows[3] + " администратором.")
+            time.sleep(1)
+            bot.send_message(message.chat.id, "Права повышены!")
+            try:
+                bot.send_photo(rows[0], garold)
+            except:
+                bot.send_message(message.chat.id, "Возникла ошибка из-за которой вы не получите мем :(")
+            bot.send_message(rows[0], "Поздравляем " + rows[3] +", вы назначены администратором! Введите 'Админ меню', чтобы открыть меню администратора.")
+        else:
+            bot.send_message(message.chat.id, "Данный пользователь уже администратор.")
+
+    except:
+        bot.send_message(message.chat.id, "Возникла ошибка. Возможно такого пользователя не существует или вы ввели неверный ID.\nПопробуйте ещё раз.")
+        time.sleep(1)
+        appoint_as_administrator_start(message)
 
 #Понижение администратора
 @bot.message_handler(func=lambda message: message.text == "Убрать администратора")
@@ -162,23 +168,30 @@ def downgrad_as_administrator_end(message):
     keyboard.add(btn1)
     
     id_user = message.text
-    rows = db_user_select_by_id(id_user = id_user)
+    
+    try:
+        rows = db_user_select_by_id(id_user = id_user)
 
-    bot.send_message(message.chat.id, "Проверяю пользователя " + rows[3])
-    time.sleep(1.5)
-    if rows[6] == 2:
-        db_user_upgrade(id_user = id_user, status = 3)
-        bot.send_message(message.chat.id, "Понижаю пользователя  " + rows[3] + " .")
-        time.sleep(1.5)
-        bot.send_message(message.chat.id, "Права понижены!")
-        try:
-            bot.send_photo(rows[0], cotik_sad)
-        except:
-            bot.send_message(message.chat.id, "Возникла ошибка из-за которой вы не получите фото котика :(")
+        bot.send_message(message.chat.id, "Проверяю пользователя " + rows[3])
+        time.sleep(1)
+        if rows[6] == 2:
+            db_user_upgrade(id_user = id_user, status = 3)
+            bot.send_message(message.chat.id, "Понижаю пользователя  " + rows[3] + " .")
+            time.sleep(1)
+            bot.send_message(message.chat.id, "Права понижены!")
+            try:
+                bot.send_photo(rows[0], cotik_sad)
+            except:
+                bot.send_message(message.chat.id, "Возникла ошибка из-за которой вы не получите фото котика :(")
 
-        bot.send_message(rows[0], "Уважаемый/ая " + rows[3] +", у вас забрали права администратора! Вы можете обратиться к разработчику для выяснения причин.", reply_markup = keyboard)
-    else:
-        bot.send_message(message.chat.id, "Данный пользователь не администратор.")
+            bot.send_message(rows[0], "Уважаемый/ая " + rows[3] +", у вас забрали права администратора! Вы можете обратиться к разработчику для выяснения причин.", reply_markup = keyboard)
+        else:
+            bot.send_message(message.chat.id, "Данный пользователь не администратор.")
+
+    except:
+        bot.send_message(message.chat.id, "Возникла ошибка. Возможно такого пользователя не существует или вы ввели неверный ID.\nПопробуйте ещё раз.")
+        time.sleep(1)
+        downgrad_as_administrator_start(message)
 
 
 #Показать всех администраторов
@@ -187,7 +200,6 @@ def show_all_administrators(message):
     
     admin_list = []
     rows = len(db_all_admin_select())
-    print (rows)
     try:
         for i in db_all_admin_select():
             admin_list.append(i[3] + " " + i[7].lower() +  "\nID:" + str(i[0]) +'\n\n')
@@ -196,6 +208,7 @@ def show_all_administrators(message):
         bot.send_message(message.chat.id,"Администраторы:\n\n " + (''.join(admin_list)))
     except:
         bot.send_message(message.chat.id, "Администраторов нет.")
+
 
 #Подключение и отключение рассылки
 @bot.message_handler(func=lambda message: message.text == "Подключить рассылку" or message.text == "Отключить рассылку")
