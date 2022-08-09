@@ -8,7 +8,7 @@ token = "5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU"
 bot = telebot.TeleBot(token)
 conn = sqlite3.connect('database.db', check_same_thread=False)
 cursor = conn.cursor()
-cotik = open('cotik.jpg', 'rb')
+cotik = open('img\cotik.jpg', 'rb')
 
 
 
@@ -121,7 +121,10 @@ def db_user_upgrade(id_user:int, status):
     cursor.execute("UPDATE Users SET Id_role = ? WHERE id_user = ?", (status, id_user))
     conn.commit()
 
-
+def db_all_admin_select():
+    cursor.execute("SELECT * FROM Users LEFT OUTER JOIN Role ON Users.Id_role = Role.Id_role WHERE Users.Id_role = 2")
+    rows = cursor.fetchall()
+    return rows
     
 #ВСЕ ФУНКЦИИ РАБОТЫ С ОТЗЫВАМИ
 

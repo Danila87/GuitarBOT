@@ -16,9 +16,8 @@ from datetime import date
 #Служебные данные для бота
 token = "5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU"
 bot = telebot.TeleBot(token)
-garold = open('garold.jpg', 'rb')
-#Айди администора
-admin_id = 798854480
+garold = open('img\garold.jpg', 'rb')
+cotik_sad = open ("img\cotik_sad.jpg", "rb")
 
 #Текущие даты
 now = datetime.datetime.now()
@@ -139,19 +138,24 @@ def appoint_as_administrator_end(message):
         bot.send_message(message.chat.id, "Назначаю пользователя " + rows[3] + " администратором.")
         time.sleep(1.5)
         bot.send_message(message.chat.id, "Права повышены!")
-        bot.send_photo(rows[0], garold)
+        try:
+            bot.send_photo(rows[0], garold)
+        except:
+            bot.send_message(message.chat.id, "Возникла ошибка из-за которой вы не получите мем :(")
         bot.send_message(rows[0], "Поздравляем " + rows[3] +", вы назначены администратором! Введите 'Админ меню', чтобы открыть меню администратора.")
     else:
         bot.send_message(message.chat.id, "Данный пользователь уже администратор.")
 
+
+#Понижение администратора
 @bot.message_handler(func=lambda message: message.text == "Убрать администратора")
 
-def appoint_as_administrator_start(message):
+def downgrad_as_administrator_start(message):
 
     sent = bot.send_message(message.chat.id, "Введите Id пользователя, которого хотите убрать с поста администратора")
-    bot.register_next_step_handler(sent, appoint_as_administrator_end)
+    bot.register_next_step_handler(sent, downgrad_as_administrator_end)
 
-def appoint_as_administrator_end(message):
+def downgrad_as_administrator_end(message):
 
     keyboard = types.InlineKeyboardMarkup()
     btn1 = types.InlineKeyboardButton("Администратор", url='https://t.me/Danila877')
@@ -167,11 +171,31 @@ def appoint_as_administrator_end(message):
         bot.send_message(message.chat.id, "Понижаю пользователя  " + rows[3] + " .")
         time.sleep(1.5)
         bot.send_message(message.chat.id, "Права понижены!")
-        bot.send_photo(rows[0], garold)
+        try:
+            bot.send_photo(rows[0], cotik_sad)
+        except:
+            bot.send_message(message.chat.id, "Возникла ошибка из-за которой вы не получите фото котика :(")
+
         bot.send_message(rows[0], "Уважаемый/ая " + rows[3] +", у вас забрали права администратора! Вы можете обратиться к разработчику для выяснения причин.", reply_markup = keyboard)
     else:
         bot.send_message(message.chat.id, "Данный пользователь не администратор.")
 
+
+#Показать всех администраторов
+@bot.message_handler(func=lambda message:message.text == "Показать всех администраторов")
+def show_all_administrators(message):
+    
+    admin_list = []
+    rows = len(db_all_admin_select())
+    print (rows)
+    try:
+        for i in db_all_admin_select():
+            admin_list.append(i[3] + " " + i[7].lower() +  "\nID:" + str(i[0]) +'\n\n')
+            admin_list.sort()
+
+        bot.send_message(message.chat.id,"Администраторы:\n\n " + (''.join(admin_list)))
+    except:
+        bot.send_message(message.chat.id, "Администраторов нет.")
 
 #Подключение и отключение рассылки
 @bot.message_handler(func=lambda message: message.text == "Подключить рассылку" or message.text == "Отключить рассылку")
