@@ -183,8 +183,8 @@ def downgrad_as_administrator_end(message):
                 bot.send_photo(rows[0], cotik_sad)
             except:
                 bot.send_message(message.chat.id, "Возникла ошибка из-за которой вы не получите фото котика :(")
-
-            bot.send_message(rows[0], "Уважаемый/ая " + rows[3] +", у вас забрали права администратора! Вы можете обратиться к разработчику для выяснения причин.", reply_markup = keyboard)
+            bot.send_message(rows[0], "Уважаемый/ая " + rows[3] +", у вас забрали права администратора! Вы можете обратиться к разработчику для выяснения причин.")
+            administrator_call(message)
         else:
             bot.send_message(message.chat.id, "Данный пользователь не администратор.")
 
@@ -199,7 +199,6 @@ def downgrad_as_administrator_end(message):
 def show_all_administrators(message):
     
     admin_list = []
-    rows = len(db_all_admin_select())
     try:
         for i in db_all_admin_select():
             admin_list.append(i[3] + " " + i[7].lower() +  "\nID:" + str(i[0]) +'\n\n')

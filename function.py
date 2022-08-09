@@ -79,6 +79,15 @@ def keyboard_admin_edit_submenu(message):
     else:
         error(message = message)
 
+
+#Кнопка с ссылкой на администратора 
+def administrator_call(message):
+
+    keyboard = types.InlineKeyboardMarkup()
+    btn1 = types.InlineKeyboardButton("Администратор", url='https://t.me/Danila877')
+    keyboard.add(btn1)
+    bot.send_message(message.chat.id, "👇", reply_markup = keyboard)
+
 #ФУНКЦИИ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ
 
 #Получение всех пользователей
@@ -214,13 +223,9 @@ def error(message):
         time.sleep(0.5)
         bot.send_photo(message.chat.id, cotik)
         time.sleep(0.5)
-        keyboard = types.InlineKeyboardMarkup()
-        btn1 = types.InlineKeyboardButton("Администратор", url='https://t.me/Danila877')
-        keyboard.add(btn1)
-        bot.send_message(message.chat.id, "Что-то пошло не так.\nО данной ошибке можете написать в комментариях или написать самому разработчику по ссылке ниже !)", reply_markup = keyboard)
+        bot.send_message(message.chat.id, "Что-то пошло не так.\nО данной ошибке можете написать в отзывах или написать самому разработчику по ссылке ниже !)")
+        administrator_call(message)
     except:
-        keyboard = types.InlineKeyboardMarkup()
-        btn1 = types.InlineKeyboardButton("Администратор", url='https://t.me/Danila877')
-        keyboard.add(btn1)
-        bot.send_message(message.chat.id, "Возникла неожиданная ошибка.\nОбратитесь к администратору.", reply_markup = keyboard)
+        bot.send_message(message.chat.id, "Возникла неожиданная ошибка.\nОбратитесь к администратору.")
+        administrator_call(message)
         bot.send_photo(message.chat.id, cotik)
