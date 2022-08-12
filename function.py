@@ -24,8 +24,9 @@ def keyboard_admin(message):
     btn5 = types.KeyboardButton(text = "Вывести запросы")
     btn6 = types.KeyboardButton(text = "Создать событие")
     btn7 = types.KeyboardButton(text = "Показать ближайшие события")
+    btn8 = types.KeyboardButton(text = "Переслать сообщение")
     btn1 = types.KeyboardButton(text = "Настройки")
-    Keyboard.add(btn2, btn3, btn4, btn5, btn6, btn7, btn1)
+    Keyboard.add(btn2, btn3, btn4, btn5, btn6, btn7, btn8 ,btn1)
     time.sleep(1)
     bot.send_message(message.chat.id, "Открываю главное меню", reply_markup = Keyboard)
 

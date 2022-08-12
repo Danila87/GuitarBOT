@@ -237,6 +237,37 @@ def user_profile_slow(message):
 
     bot.send_message(message.chat.id, "Ваш ID: " + "*"+str(rows[0])+"*" + "\n" + "Ваше имя: " + str(rows[1]) + "\n" + "Ваша фамилия: " + str(rows[2]) + "\n" + "Ваш никнейм: " + str(rows[3]) + "\n" + "Ваш статус: " + rows [7] + "\n" + "Подписка на рассылку: " + newsletter_subscription, parse_mode="Markdown")
 
+#Пересылка различных сообщений пользователям
+@bot.message_handler(func=lambda message: message.text == "Переслать сообщение")
+def forward_message_start(message):
+
+    rows = db_user_select_by_id(id_user =  message.from_user.id)
+
+    if rows[6] == 2 or rows[6] == 1:
+        sent = bot.send_message(message.chat.id, "Следующее сообщение будет отправлено пользовалям у которых подключена рассылка.\nВведите 'Отмена' если вы нажали кнопку по ошибке.")
+        bot.register_next_step_handler(sent, forward_message_end)
+    else:
+        error(message = message)
+
+def forward_message_end(message):
+
+    rows = db_user_select_by_id(id_user =  message.from_user.id)
+    users = db_user_select()
+
+    if message.text == "Отмена" or message.text == "отмена":
+        if rows[6] == 1 or rows [6] == 2:
+            keyboard_admin(message)
+        else:
+            keyboard_user(message)
+    else:
+        bot.send_message(message.chat.id, "Пробую разослать сообщение пользователям..")
+        try:
+            for i in users:
+                bot.forward_message(i[0], message.chat.id, message.message_id)
+            bot.send_message(message.chat.id, "Сообщение успешно разослано.")
+        except:
+            bot.send_message(message.chat.id, "Возникла ошибка")
+
 
 #Оставить отзыв
 @bot.message_handler(func=lambda message: message.text == 'Оставить отзыв')
