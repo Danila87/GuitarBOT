@@ -427,12 +427,21 @@ def event_create_start(message):
 
 def date_event(message):
 
+    rows =  [x[0] for x in db_types_events()]
+    print(rows) 
+
     if message.text == "Назад":
         keyboard_admin(message)
-    else:
+
+    elif message.text in rows:
         type_event = message.text
         sent = bot.send_message(message.chat.id, "Введите дату декоративную.\nНапример '6 апреля'")
         bot.register_next_step_handler(sent, date_event_technical, type_event)
+
+    else:
+        bot.send_message(message.chat.id, "Вы ввели недопустимое значение, попробуйте ещё раз")
+        time.sleep(1.5)
+        event_create_start(message)
 
 def date_event_technical (message, type_event):
 
