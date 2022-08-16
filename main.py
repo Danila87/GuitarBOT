@@ -12,6 +12,7 @@ from datetime import datetime
 from function import *
 import datetime
 from datetime import date
+import re
 
 #Служебные данные для бота
 token = "5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU"
@@ -476,15 +477,41 @@ def date_event(message):
 
 def date_event_technical (message, type_event):
 
-    date_event = message.text
-    sent = bot.send_message(message.chat.id, "Введите техническую дату в формате '2022-01-01' после которой мероприятие будет не актуально.\n")
-    bot.register_next_step_handler(sent, text_event, type_event, date_event)
+    if message.text == "Назад":
+        keyboard_admin(message)
 
+    else:
+        date_event = message.text
+        date_event = date_event.title()
+
+        result = re.match(r'(\b[0-9]\b (Января|Февраля|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декарбря))|(\b[12][0-9]\b (Января|Февраля|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декарбря))|(\b3[01]\b (Января|Февраля|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декарбря))', date_event)
+
+        if result == None:
+            sent = bot.send_message(message.chat.id, "Вы ввели некорректную дату.\n Попробуйте ещё раз.")
+            bot.register_next_step_handler(sent, date_event_technical, type_event)
+            time.sleep (1.5)
+            bot.send_message(message.chat.id, "Введите дату декоративную.\nНапример '6 апреля'")
+        else:
+            sent = bot.send_message(message.chat.id, "Введите техническую дату в формате '2022-01-01' после которой мероприятие будет не актуально.")
+            bot.register_next_step_handler(sent, text_event, type_event, date_event)
+    
 def text_event(message, type_event, date_event):
 
-    date_event_technical = message.text
-    sent = bot.send_message(message.chat.id, "Введите текст события")
-    bot.register_next_step_handler(sent, event_preview, type_event, date_event, date_event_technical)
+    if message.text == "Назад":
+        keyboard_admin(message)
+    
+    else:
+        date_technical = message.text
+        result = re.match(r'([12]\d\d\d)\-(0[1-9]|1[12])\-(0[1-9]|[12]\d|3[12])', date_technical)
+
+        if result == None:
+            sent = bot.send_message(message.chat.id, "Вы ввели недопустимую дату. Попробуйте ещё раз.")
+            bot.register_next_step_handler(sent, text_event, type_event, date_event)
+            time.sleep (1.5)
+            bot.send_message(message.chat.id, "Введите техническую дату в формате '2022-01-01' после которой мероприятие будет не актуально.")
+        else:
+            sent = bot.send_message(message.chat.id, "Введите текст события")
+            bot.register_next_step_handler(sent, event_preview, type_event, date_event, date_technical)
 
 def event_preview(message, type_event, date_event, date_event_technical):
 
