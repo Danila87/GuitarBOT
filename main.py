@@ -516,12 +516,20 @@ def text_event(message, type_event, date_event):
 def event_preview(message, type_event, date_event, date_event_technical):
 
     text_event = message.text
-    bot.send_message(message.chat.id, "Предпросмотр события: ")
-    time.sleep(1)
-    bot.send_message(message.chat.id, "Тип события: " + type_event + '\nДата события: ' + date_event + '\nТекст события:\n' + text_event + '\nТехническая дата: ' + date_event_technical)
-    time.sleep(1)
-    sent = bot.send_message(message.chat.id, "Сохранить событие?", reply_markup=keyboard_yes_no(message))
-    bot.register_next_step_handler(sent, save_event, type_event, date_event, text_event, date_event_technical)
+    result = re.match(r'(\s+|^)[пПnрРp]?[3ЗзВBвПnпрРpPАaAаОoO0о]?[сСcCиИuUОoO0оАaAаыЫуУyтТT]?[Ппn][иИuUeEеЕ][зЗ3][ДдDd]\w*[\?\,\.\;\-]*|(\s+|^)[рРpPпПn]?[рРpPоОoO0аАaAзЗ3]?[оОoO0иИuUаАaAcCсСзЗ3тТTуУy]?[XxХх][уУy][йЙеЕeEeяЯ9юЮ]\w*[\?\,\.\;\-]*|(\s+|^)[бпПnБ6][лЛ][яЯ9]([дтДТDT]\w*)?[\?\,\.\;\-]*|(\s+|^)(([зЗоОoO03]?[аАaAтТT]?[ъЪ]?)|(\w+[оОOo0еЕeE]))?[еЕeEиИuUёЁ][бБ6пП]([аАaAиИuUуУy]\w*)?[\?\,\.\;\-]*', text_event)
+    
+    if result == None:
+        bot.send_message(message.chat.id, "Предпросмотр события: ")
+        time.sleep(1)
+        bot.send_message(message.chat.id, "Тип события: " + type_event + '\nДата события: ' + date_event + '\nТекст события:\n' + text_event + '\nТехническая дата: ' + date_event_technical)
+        time.sleep(1)
+        sent = bot.send_message(message.chat.id, "Сохранить событие?", reply_markup=keyboard_yes_no(message))
+        bot.register_next_step_handler(sent, save_event, type_event, date_event, text_event, date_event_technical)
+    else:
+        sent = bot.send_message(message.chat.id, "В вашем тексте обнаружен мат!\nВведите текст заново.")
+        bot.register_next_step_handler(sent, event_preview, type_event, date_event, date_event_technical)
+        time.sleep(1.5)
+        bot.send_message(message.chat.id, "Введите текст события")
 
 def save_event(message, type_event, date_event, text_event, date_event_technical):
 
