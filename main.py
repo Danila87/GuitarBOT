@@ -79,7 +79,7 @@ def admin_menu(message):
 
 
 #Подменю
-@bot.message_handler(func = lambda message: message.text == "Вывести запросы" or message.text == "Назад" or message.text == "Настройки")
+@bot.message_handler(func = lambda message: message.text == "Вывести запросы" or message.text == "Назад")
 def submenu(message):
 
     rows = db_user_select_by_id(message.from_user.id)
@@ -104,12 +104,27 @@ def submenu(message):
         else:
             keyboard_user(message)
 
-    if message.text == "Настройки":
-        keyboard_setting_submenu(message, text = "Открываю")
+@bot.message_handler(func = lambda message: message.text == 'Песенники')
+def send_pesennik_io_spo(message):
+
+    keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard = True)
+    btn1 = types.KeyboardButton(text = "Назад")
+
+    for i in db_all_song_book():
+            btn = types.KeyboardButton(text=i[1])
+            keyboard.add(btn)
+    keyboard.add(btn1)
+    bot.send_message(message.chat.id, "Выберите песенник", reply_markup = keyboard)
+
+@bot.message_handler(func = lambda message: message.text in [x[1] for x in db_all_song_book()])
+def send_file_by_title(message):
+
+    song_book_title = message.text
+    db_song_book_by_title (message = message, song_book_title=song_book_title)
 
 
 #Вывод основного меню
-@bot.message_handler(func=lambda message: message.text == 'Меню' or message.text == "меню")
+@bot.message_handler(func = lambda message: message.text == 'Меню' or message.text == "меню")
 def main_menu(message):
 
     keyboard_user(message)
@@ -119,6 +134,24 @@ def main_menu(message):
 def admin_edit_submenu(message):
 
     keyboard_admin_edit_submenu(message)
+
+#Подменю "События"
+@bot.message_handler(func = lambda message: message.text == "События")
+def event_submenu(message):
+
+    keyboard_event_submenu(message)
+
+#Подменю "Отзывы"
+@bot.message_handler(func = lambda message: message.text == "Отзывы")
+def review_submenu(message):
+
+    keyboard_review_submenu(message)
+
+#Подменю "Настройки"
+@bot.message_handler(func = lambda message: message.text == "Настройки")
+def review_submenu(message):
+
+    keyboard_setting_submenu(message, text = "Открываю")
 
 #Назначение администратора
 @bot.message_handler(func=lambda message: message.text == "Назначить администратором")
@@ -517,7 +550,7 @@ def event_preview(message, type_event, date_event, date_event_technical):
 
     text_event = message.text
     result = re.match(r'(\s+|^)[пПnрРp]?[3ЗзВBвПnпрРpPАaAаОoO0о]?[сСcCиИuUОoO0оАaAаыЫуУyтТT]?[Ппn][иИuUeEеЕ][зЗ3][ДдDd]\w*[\?\,\.\;\-]*|(\s+|^)[рРpPпПn]?[рРpPоОoO0аАaAзЗ3]?[оОoO0иИuUаАaAcCсСзЗ3тТTуУy]?[XxХх][уУy][йЙеЕeEeяЯ9юЮ]\w*[\?\,\.\;\-]*|(\s+|^)[бпПnБ6][лЛ][яЯ9]([дтДТDT]\w*)?[\?\,\.\;\-]*|(\s+|^)(([зЗоОoO03]?[аАaAтТT]?[ъЪ]?)|(\w+[оОOo0еЕeE]))?[еЕeEиИuUёЁ][бБ6пП]([аАaAиИuUуУy]\w*)?[\?\,\.\;\-]*', text_event)
-    
+
     if result == None:
         bot.send_message(message.chat.id, "Предпросмотр события: ")
         time.sleep(1)

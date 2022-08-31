@@ -19,14 +19,12 @@ cotik = open('img\cotik.jpg', 'rb')
 def keyboard_admin(message):
     Keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard=True)
     btn2 = types.KeyboardButton(text = "Список песен")
-    btn3 = types.KeyboardButton(text = "Оставить отзыв")
-    btn4 = types.KeyboardButton(text = "Показать отзывы")
+    btn3 = types.KeyboardButton(text = "Отзывы")
     btn5 = types.KeyboardButton(text = "Вывести запросы")
-    btn6 = types.KeyboardButton(text = "Создать событие")
-    btn7 = types.KeyboardButton(text = "Показать ближайшие события")
+    btn6 = types.KeyboardButton(text = "События")
     btn8 = types.KeyboardButton(text = "Переслать сообщение")
     btn1 = types.KeyboardButton(text = "Настройки")
-    Keyboard.add(btn2, btn3, btn4, btn5, btn6, btn7, btn8 ,btn1)
+    Keyboard.add(btn2, btn3, btn5, btn6, btn8 ,btn1)
     time.sleep(1)
     bot.send_message(message.chat.id, "Открываю главное меню", reply_markup = Keyboard)
 
@@ -35,7 +33,7 @@ def keyboard_user(message):
     Keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard=True)
     btn2 = types.KeyboardButton(text = "Список песен")
     btn3 = types.KeyboardButton(text = "Оставить отзыв")
-    btn4 = types.KeyboardButton(text = "Показать ближайшие события")
+    btn4 = types.KeyboardButton(text = "События")
     btn1 = types.KeyboardButton(text = "Настройки")
     Keyboard.add(btn2, btn3, btn4, btn1)
     bot.send_message(message.chat.id, "Открываю меню", reply_markup = Keyboard)
@@ -53,6 +51,7 @@ def keyboard_setting_submenu(message, text):
     rows = db_user_select_by_id(id_user = message.from_user.id)
     keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard = True)
     btn1 = types.KeyboardButton(text = "Показать мои данные")
+    btn5 = types.KeyboardButton(text = "Песенники")
     btn4 = types.KeyboardButton(text = "Назад")
     if rows[4] == 0:
         btn2 = types.KeyboardButton(text = "Подключить рассылку")
@@ -60,15 +59,47 @@ def keyboard_setting_submenu(message, text):
         btn2 = types.KeyboardButton(text = "Отключить рассылку")
     if rows[6] == 1:
         btn3 = types.KeyboardButton(text = "Администраторы")
-        keyboard.add(btn1, btn2, btn3, btn4)
+        keyboard.add(btn1, btn2, btn3, btn5, btn4)
         bot.send_message(message.chat.id, text, reply_markup = keyboard)
     else:
-        keyboard.add(btn1, btn2, btn4)
+        keyboard.add(btn1, btn2, btn5, btn4)
         bot.send_message(message.chat.id, text, reply_markup = keyboard)
+
+#Подменю "События"
+def keyboard_event_submenu(message):
+    rows = db_user_select_by_id(id_user = message.from_user.id)
+    keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard=True)
+    btn1 = types.KeyboardButton(text = "Показать ближайшие события")
+    btn3 = types.KeyboardButton(text = "Назад")
+    if rows[6] == 1 or rows[6] == 2:
+        btn2 = types.KeyboardButton(text = "Создать событие")
+        keyboard.add(btn1, btn2, btn3)
+        bot.send_message(message.chat.id, "Открываю", reply_markup = keyboard)
+    else:
+        keyboard.add(btn1, btn3)
+        bot.send_message(message.chat.id, "Открываю", reply_markup = keyboard)
+
+#Подменю "Отзывы"
+def keyboard_review_submenu(message):
+
+    rows = db_user_select_by_id(id_user = message.from_user.id)
+
+    if rows[6] == 1 or rows[6] == 2:
+        rows = db_user_select_by_id(id_user = message.from_user.id)
+        keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard = True)
+        btn1 = types.KeyboardButton(text = "Показать отзывы")
+        btn2 = types.KeyboardButton(text = "Оставить отзыв")
+        btn3 = types.KeyboardButton(text = "Назад")
+        keyboard.add(btn1, btn2, btn3)
+        bot.send_message(message.chat.id, "Открываю", reply_markup = keyboard)
+    else:
+        error(message = message)
 
 #Подменю "Администраторы"
 def keyboard_admin_edit_submenu(message):
+
     rows = db_user_select_by_id(id_user = message.from_user.id)
+
     if rows[6] == 1:
         keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard = True)
         btn1 = types.KeyboardButton(text = "Назад")
@@ -79,7 +110,6 @@ def keyboard_admin_edit_submenu(message):
         bot.send_message(message.chat.id, "Открываю", reply_markup = keyboard)
     else:
         error(message = message)
-
 
 #Кнопка с ссылкой на администратора 
 def administrator_call(message):
@@ -230,3 +260,18 @@ def error(message):
         bot.send_message(message.chat.id, "Возникла неожиданная ошибка.\nОбратитесь к администратору.")
         administrator_call(message)
         bot.send_photo(message.chat.id, cotik)
+
+#Все песенники
+def db_all_song_book():
+    cursor.execute("SELECT * FROM Song_book")
+    rows = cursor.fetchall()
+    return rows
+
+#Песенник по заголовку
+def db_song_book_by_title(message, song_book_title):
+    cursor.execute("SELECT file_path FROM Song_book WHERE title_book = ?", (song_book_title,))
+    rows = cursor.fetchone()
+    file = open (rows[0], 'rb')
+    bot.send_message(message.chat.id, "Загружаю...")
+    bot.send_document(message.chat.id, file)
+    
