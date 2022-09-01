@@ -104,6 +104,8 @@ def submenu(message):
         else:
             keyboard_user(message)
 
+
+#Все песенники
 @bot.message_handler(func = lambda message: message.text == 'Песенники')
 def send_pesennik_io_spo(message):
 
@@ -116,6 +118,8 @@ def send_pesennik_io_spo(message):
     keyboard.add(btn1)
     bot.send_message(message.chat.id, "Выберите песенник", reply_markup = keyboard)
 
+
+#Выдача файла песенника
 @bot.message_handler(func = lambda message: message.text in [x[1] for x in db_all_song_book()])
 def send_file_by_title(message):
 
@@ -129,11 +133,13 @@ def main_menu(message):
 
     keyboard_user(message)
 
+
 #Подменю "Администраторы"
 @bot.message_handler(func=lambda message: message.text == "Администраторы")
 def admin_edit_submenu(message):
 
     keyboard_admin_edit_submenu(message)
+
 
 #Подменю "События"
 @bot.message_handler(func = lambda message: message.text == "События")
@@ -141,17 +147,20 @@ def event_submenu(message):
 
     keyboard_event_submenu(message)
 
+
 #Подменю "Отзывы"
 @bot.message_handler(func = lambda message: message.text == "Отзывы")
 def review_submenu(message):
 
     keyboard_review_submenu(message)
 
+
 #Подменю "Настройки"
 @bot.message_handler(func = lambda message: message.text == "Настройки")
 def review_submenu(message):
 
     keyboard_setting_submenu(message, text = "Открываю")
+
 
 #Назначение администратора
 @bot.message_handler(func=lambda message: message.text == "Назначить администратором")
@@ -186,6 +195,7 @@ def appoint_as_administrator_end(message):
         bot.send_message(message.chat.id, "Возникла ошибка. Возможно такого пользователя не существует или вы ввели неверный ID.\nПопробуйте ещё раз.")
         time.sleep(1)
         appoint_as_administrator_start(message)
+
 
 #Понижение администратора
 @bot.message_handler(func=lambda message: message.text == "Убрать администратора")
