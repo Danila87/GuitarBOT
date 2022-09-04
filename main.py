@@ -13,6 +13,10 @@ from function import *
 import datetime
 from datetime import date
 import re
+import requests
+from bs4 import BeautifulSoup
+import random
+
 
 #Служебные данные для бота
 token = "5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU"
@@ -644,7 +648,16 @@ def list_of_songs(message):
     time.sleep(1.5)
     bot.send_message(chat_id,(''.join(list_song)))
 
+@bot.message_handler(commands = ['Masha'])
+def Masha (message):
 
+    out = open("img\masha.jpg", "wb")
+    out.write(get_img_from_Masha().content)
+    out.close()
+
+    img = open("img\masha.jpg", "rb")
+    bot.send_photo(message.chat.id, img)
+    
 #Вывод песни
 @bot.message_handler(func = lambda m: True)
 def show_song(message):
@@ -673,6 +686,5 @@ def show_song(message):
         if row == False:
             time.sleep(1.5)
             bot.send_message(chat_id, 'К сожалению я не нашёл такую песню.\nПопробуйте другую.')
-
 
 bot.polling(non_stop = True)

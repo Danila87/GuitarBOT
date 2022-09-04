@@ -3,6 +3,9 @@ import sqlite3
 import telebot
 from telebot import types
 import time
+import requests
+from bs4 import BeautifulSoup
+import random
 
 token = "5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU"
 bot = telebot.TeleBot(token)
@@ -274,4 +277,22 @@ def db_song_book_by_title(message, song_book_title):
     file = open (rows[0], 'rb')
     bot.send_message(message.chat.id, "Загружаю...")
     bot.send_document(message.chat.id, file)
-    
+
+#Получение фотографии для Маши
+def get_img_from_Masha():
+    image_list = []
+
+    for p in range(1,5):
+
+        url = 'https://www.goodfon.ru/index-'+str(p)+'.html'
+        r = requests.get(url)
+        soup = BeautifulSoup(r.text, 'lxml')
+        images = soup.findAll('div', class_='wallpapers__item')
+
+        for image in images:
+            link = soup.find('img', class_='wallpapers__item__img').get('src')
+            image_list.append(link)
+
+    img_url = requests.get(random.choice(image_list))   
+
+    return img_url
