@@ -13,7 +13,7 @@ token = "5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU"
 bot = telebot.TeleBot(token)
 conn = sqlite3.connect('database.db', check_same_thread=False)
 cursor = conn.cursor()
-cotik = open('img\cotik.jpg', 'rb')
+cotik = open('img//cotik.jpg', 'rb')
 
 
 
