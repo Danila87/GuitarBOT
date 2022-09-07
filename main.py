@@ -20,7 +20,7 @@ import os
 
 
 #Служебные данные для бота
-token = os.environ["BOT_TOKEN"]
+token = "5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU"
 bot = telebot.TeleBot(token)
 
 #Текущие даты
