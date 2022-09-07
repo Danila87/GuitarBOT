@@ -1,3 +1,4 @@
+from itertools import count
 import re
 import sqlite3
 import telebot
@@ -6,6 +7,7 @@ import time
 import requests
 from bs4 import BeautifulSoup
 import random
+import time
 
 token = "5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU"
 bot = telebot.TeleBot(token)
@@ -279,20 +281,79 @@ def db_song_book_by_title(message, song_book_title):
     bot.send_document(message.chat.id, file)
 
 #Получение фотографии для Маши
-def get_img_from_Masha():
-    image_list = []
+def get_img_from_Masha(message):
 
-    for p in range(1,5):
+    start_time = time.time() 
 
-        url = 'https://www.goodfon.ru/index-'+str(p)+'.html'
+    bot.send_message(message.chat.id, 'Формирую списки\n[////                ]')
+    time.sleep(1.5)
+    
+
+    image_shalame_list = []
+    image_depp_list = []
+    line_list = []
+
+    used_links = open("files/used_links.txt", "a")
+    used_links2 = open("files/used_links.txt", "r").read().split('\n')
+
+    urlsite = 'https://www.theplace.ru'
+    count = 0
+
+    #Заполнение списка ссылками из файла
+    for line in used_links2:
+        line_list.append(line)
+
+    bot.edit_message_text ('Собираю фотографии\n[//////              ]', chat_id=message.chat.id, message_id=message.message_id + 1)
+    time.sleep(1)
+
+    #Шаламе
+    for p in range(1,3):
+
+        url = 'https://www.theplace.ru/photos/timothee_chalamet/?page='+str(p)
         r = requests.get(url)
         soup = BeautifulSoup(r.text, 'lxml')
-        images = soup.findAll('div', class_='wallpapers__item')
+        images = soup.findAll('div', class_='p-1')
 
         for image in images:
-            link = soup.find('img', class_='wallpapers__item__img').get('src')
-            image_list.append(link)
+            link = image.find('a').get('href')
+            r2 = requests.get(urlsite + link)
+            soup2 = BeautifulSoup(r2.text, 'lxml')
+            link2 = soup2.find('img', class_ = 'pic big_pic').get('src')
+            image_shalame_list.append(urlsite + link2)
+            count = count + 1
+            bot.edit_message_text ('Собрано фотографий: ' + str(count) + '\n[/////////           ]', chat_id=message.chat.id, message_id=message.message_id + 1)
 
-    img_url = requests.get(random.choice(image_list))   
+    #Джонни
+    for p in range(1,3):
 
-    return img_url
+        url = 'https://www.theplace.ru/photos/johnny_depp/?page='+str(p)
+        r = requests.get(url)
+        soup = BeautifulSoup(r.text, 'lxml')
+        images = soup.findAll('div', class_='col-6 col-sm-6 col-md-6 col-lg-4 col-xl-3 pb-3')
+        for image in images:
+            link = image.find('a', class_='photos-pic-card__link').get('href')
+            r2 = requests.get(urlsite+link)
+            soup2 = BeautifulSoup(r2.text, 'lxml')
+            link2 = soup2.find('img', class_='pic big_pic').get('src')
+            image_depp_list.append(urlsite+link2)
+            count = count + 1
+            bot.edit_message_text ('Собрано фотографий: ' + str(count) + '\n[/////////////       ]', chat_id=message.chat.id, message_id=message.message_id + 1)
+
+    bot.edit_message_text ('Выбираю фотографию\n[////////////////    ]', chat_id=message.chat.id, message_id=message.message_id + 1)
+    image_list = image_depp_list + image_shalame_list        
+    image_list = list(set(image_list) - set(line_list))
+
+    if len(image_list):
+        time.sleep(1.5)
+        bot.edit_message_text ('Загружаю фотографию\n[//////////////////  ]', chat_id = message.chat.id, message_id=message.message_id + 1)
+        random.shuffle(image_list)
+        img_url = random.choice(image_list)
+        used_links.write(img_url + '\n')
+        bot.edit_message_text ('Загружено\n[////////////////////]', chat_id = message.chat.id, message_id=message.message_id + 1)
+        time.sleep(1.5)
+        end_time = time.time()-start_time 
+        bot.edit_message_text ('Время выполнения: ' + str(end_time), chat_id = message.chat.id, message_id=message.message_id + 1)
+        return img_url
+    else:
+        bot.send_message(message.chat.id, 'Фотографии закончились :(. Обратись к Дане, чтобы он починил тут всё!!!')
+    

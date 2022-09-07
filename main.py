@@ -648,16 +648,30 @@ def list_of_songs(message):
     time.sleep(1.5)
     bot.send_message(chat_id,(''.join(list_song)))
 
+
+#Вывод картинки для Маши
 @bot.message_handler(commands = ['Masha'])
 def Masha (message):
 
     out = open("img\masha.jpg", "wb")
-    out.write(get_img_from_Masha().content)
+    out.write(requests.get(get_img_from_Masha(message=message)).content)
     out.close()
 
     img = open("img\masha.jpg", "rb")
     bot.send_photo(message.chat.id, img)
+    time.sleep(1)
+    sent = bot.send_message(message.chat.id, 'Ещё?', reply_markup=keyboard_yes_no(message))
+    bot.register_next_step_handler(sent, Masha_hub)
+
+
+def Masha_hub(message):
     
+    if message.text == 'Да':
+        Masha(message=message)
+    else:
+        keyboard_user(message=message)
+
+
 #Вывод песни
 @bot.message_handler(func = lambda m: True)
 def show_song(message):
