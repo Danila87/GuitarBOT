@@ -346,6 +346,7 @@ def get_img_from_Masha(message):
     if len(image_list):
         time.sleep(1.5)
         bot.edit_message_text ('Загружаю фотографию\n[//////////////////  ]', chat_id = message.chat.id, message_id=message.message_id + 1)
+        time.sleep(1.5)
         random.shuffle(image_list)
         img_url = random.choice(image_list)
         used_links.write(img_url + '\n')
@@ -355,5 +356,5 @@ def get_img_from_Masha(message):
         bot.edit_message_text ('Время выполнения: ' + str(end_time), chat_id = message.chat.id, message_id=message.message_id + 1)
         return img_url
     else:
-        bot.send_message(message.chat.id, 'Фотографии закончились :(. Обратись к Дане, чтобы он починил тут всё!!!')
+        bot.send_message(message.chat.id, 'Фотографии закончились. ')
     

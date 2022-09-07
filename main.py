@@ -21,8 +21,6 @@ import random
 #Служебные данные для бота
 token = "5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU"
 bot = telebot.TeleBot(token)
-garold = open('img\garold.jpg', 'rb')
-cotik_sad = open ("img\cotik_sad.jpg", "rb")
 
 #Текущие даты
 now = datetime.datetime.now()
@@ -188,7 +186,9 @@ def appoint_as_administrator_end(message):
             time.sleep(1)
             bot.send_message(message.chat.id, "Права повышены!")
             try:
+                garold = open('img\garold.jpg', 'rb')
                 bot.send_photo(rows[0], garold)
+                garold.close()
             except:
                 bot.send_message(message.chat.id, "Возникла ошибка из-за которой вы не получите мем :(")
             bot.send_message(rows[0], "Поздравляем " + rows[3] +", вы назначены администратором! Введите 'Админ меню', чтобы открыть меню администратора.")
@@ -228,7 +228,9 @@ def downgrad_as_administrator_end(message):
             time.sleep(1)
             bot.send_message(message.chat.id, "Права понижены!")
             try:
+                cotik_sad = open ("img\cotik_sad.jpg", "rb")
                 bot.send_photo(rows[0], cotik_sad)
+                cotik_sad.close()
             except:
                 bot.send_message(message.chat.id, "Возникла ошибка из-за которой вы не получите фото котика :(")
             bot.send_message(rows[0], "Уважаемый/ая " + rows[3] +", у вас забрали права администратора! Вы можете обратиться к разработчику для выяснения причин.")
