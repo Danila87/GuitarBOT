@@ -16,10 +16,11 @@ import re
 import requests
 from bs4 import BeautifulSoup
 import random
+import os
 
 
 #Служебные данные для бота
-token = "5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU"
+token = os.environ["BOT_TOKEN"]
 bot = telebot.TeleBot(token)
 
 #Текущие даты
