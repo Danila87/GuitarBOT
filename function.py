@@ -8,9 +8,10 @@ import requests
 from bs4 import BeautifulSoup
 import random
 import time
+import os
 
-token = "5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU"
-bot = telebot.TeleBot(token)
+TOKEN = os.environ["BOT_TOKEN"]
+bot = telebot.TeleBot(TOKEN)
 conn = sqlite3.connect('database.db', check_same_thread=False)
 cursor = conn.cursor()
 cotik = open('img//cotik.jpg', 'rb')
