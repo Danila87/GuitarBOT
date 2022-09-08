@@ -20,8 +20,9 @@ import os
 
 
 #Служебные данные для бота
-TOKEN = os.environ["BOT_TOKEN"]
-bot = telebot.TeleBot(TOKEN)
+#TOKEN = os.environ["BOT_TOKEN"]
+token = '5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU'
+bot = telebot.TeleBot(token)
 
 #Текущие даты
 now = datetime.datetime.now()
@@ -74,7 +75,7 @@ def admin_menu(message):
     bot.send_message(message.chat.id, "Проверяю данные...")
     time.sleep(1.5)
 
-    if rows[6] == 3 or rows [6] == 2:
+    if rows[6] == 1 or rows [6] == 2:
         keyboard_admin(message)
     else:
         bot.send_message(message.chat.id, "В доступе отказано.")
@@ -159,7 +160,7 @@ def review_submenu(message):
 
 
 #Подменю "Настройки"
-@bot.message_handler(func = lambda message: message.text == "Настройки")
+@bot.message_handler(func = lambda message: message.text == "Настройки ⚙️")
 def review_submenu(message):
 
     keyboard_setting_submenu(message, text = "Открываю")
@@ -673,6 +674,12 @@ def Masha_hub(message):
         Masha(message=message)
     else:
         keyboard_user(message=message)
+
+
+#Помощь
+@bot.message_handler(func = lambda message: message.text == 'Помощь')
+def help (message):
+    bot.send_message(message.chat.id, 'ПОМОЩЬ\n\n• Бот создан для облегчения поиска песен из песенника. Для того чтобы найти песню просто введите её название, можно с ошибками но незначительными:)\n\n• Если у вас неожиданно пропало меню или по какой-то причине не оно открылось отправьте боту "Меню" и он его перезапустит.\n\n• В случае если бот не работает должным образом и выдаёт ошибку то вы можете написать администратору (В случае ошибки бот пришлёт на него ссылку) либо оставить отзыв с описанием проблемы.\n\n• Если программой предусмотрено, что у вас недостаточно прав для выполнения определённых функций то бот пришлёт вам ошибку с котиком :)\n\n• Если у вас есть пожелания по поводу улучшения работы бота или вы просто хотите оставить благодарность, то для этого вы можете написать отзыв через соответствующую команду!)')
 
 
 #Вывод песни
