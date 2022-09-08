@@ -283,8 +283,6 @@ def db_song_book_by_title(message, song_book_title):
 #Получение фотографии для Маши
 def get_img_from_Masha(message):
 
-    start_time = time.time() 
-
     bot.send_message(message.chat.id, 'Формирую списки\n[////                ]')
     time.sleep(1.5)
     
@@ -351,9 +349,6 @@ def get_img_from_Masha(message):
         img_url = random.choice(image_list)
         used_links.write(img_url + '\n')
         bot.edit_message_text ('Загружено\n[////////////////////]', chat_id = message.chat.id, message_id=message.message_id + 1)
-        time.sleep(1.5)
-        end_time = time.time()-start_time 
-        bot.edit_message_text ('Время выполнения: ' + str(end_time), chat_id = message.chat.id, message_id=message.message_id + 1)
         return img_url
     else:
         bot.send_message(message.chat.id, 'Фотографии закончились. ')
