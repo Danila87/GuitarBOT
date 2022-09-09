@@ -3,6 +3,7 @@ from email import message
 from email.message import Message
 from glob import escape
 from itertools import count
+from unicodedata import name
 import telebot
 import time
 from fuzzywuzzy import fuzz
@@ -17,13 +18,20 @@ import requests
 from bs4 import BeautifulSoup
 import random
 import os
-
+import speech_recognition as sr
+import subprocess
+import ffmpeg
+import soundfile as sf
+import yadisk
 
 #Служебные данные для бота
 #TOKEN = os.environ["BOT_TOKEN"]
 token = '5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU'
+yandex_token = 'y0_AgAAAAAO_DuQAAhmIAAAAADOUpN38O9Jqe8fTx275pqgdwJIP-pbvR8'
+y = yadisk.YaDisk(token=yandex_token)
 bot = telebot.TeleBot(token)
-
+logfile_record = 'audio_record//' +  str(datetime.date.today()) + '_record.log'
+logfile_error = 'audio_record//' + str(datetime.date.today()) + '_error.log'
 #Текущие даты
 now = datetime.datetime.now()
 year = str(now.year)
@@ -657,12 +665,12 @@ def list_of_songs(message):
 @bot.message_handler(commands = ['Masha'])
 def Masha (message):
 
-    out = open("img\masha.jpg", "wb")
-    out.write(requests.get(get_img_from_Masha(message=message)).content)
-    out.close()
+    with open("img\masha.jpg", "wb") as i:
+        i.write(requests.get(get_img_from_Masha(message=message)).content)
 
-    img = open("img\masha.jpg", "rb")
-    bot.send_photo(message.chat.id, img)
+    with open("img\masha.jpg", "rb") as i:
+        bot.send_photo(message.chat.id, i)
+
     time.sleep(1)
     sent = bot.send_message(message.chat.id, 'Ещё?', reply_markup=keyboard_yes_no(message))
     bot.register_next_step_handler(sent, Masha_hub)
@@ -682,33 +690,61 @@ def help (message):
     bot.send_message(message.chat.id, 'ПОМОЩЬ\n\n• Бот создан для облегчения поиска песен из песенника. Для того чтобы найти песню просто введите её название, можно с ошибками но незначительными:)\n\n• Если у вас неожиданно пропало меню или по какой-то причине не оно открылось отправьте боту "Меню" и он его перезапустит.\n\n• В случае если бот не работает должным образом и выдаёт ошибку то вы можете написать администратору (В случае ошибки бот пришлёт на него ссылку) либо оставить отзыв с описанием проблемы.\n\n• Если программой предусмотрено, что у вас недостаточно прав для выполнения определённых функций то бот пришлёт вам ошибку с котиком :)\n\n• Если у вас есть пожелания по поводу улучшения работы бота или вы просто хотите оставить благодарность, то для этого вы можете написать отзыв через соответствующую команду!)')
 
 
-#Вывод песни
-@bot.message_handler(func = lambda m: True)
-def show_song(message):
+#Поиск песни через текст и аудио
+@bot.message_handler(content_types=['voice', 'text'])
+def search_song(message):
 
-    if message.text == '/start':
-        bot.send_message(message.chat.id, 'Введите название песни а не команду.')
-    else:
-        chat_id = message.chat.id
-        title_song = message.text
-        title_song = title_song.lower().replace(" ", "")
-        row = False
-        for i in db_song_select():
-            a = fuzz.WRatio(i[2], title_song)
-            if a>75:
-                bot.send_message(chat_id, 'Ищу песню: ' + i[1])
-                time.sleep(1.5)
-                bot.send_message(chat_id, i[3])
-                try:
-                    audio = open(r'song'+i[4], 'rb')
-                    bot.send_audio(chat_id, audio)
-                except:
-                    pass
-                row = True
-                db_requests_insert(id_user=message.from_user.id, requests=i[1], date = date.today())
-                break
-        if row == False:
-            time.sleep(1.5)
-            bot.send_message(chat_id, 'К сожалению я не нашёл такую песню.\nПопробуйте другую.')
+    if message.content_type == 'text':
+
+       title_song = message.text
+       title_song = title_song.lower().replace(" ", "")
+       song_searc(message=message, title_song=title_song)
+
+    elif message.content_type == 'voice':
+
+        try:
+            file_info = bot.get_file(message.voice.file_id)
+            path = os.path.splitext(file_info.file_path)[0] # Вот тут-то и полный путь до файла (например: voice/file_2.oga)
+            fname = os.path.basename(path) # Преобразуем путь в имя файла (например: file_2.oga)
+            fname = 'audio_record//'+fname
+            print(fname)
+            doc = requests.get('https://api.telegram.org/file/bot{0}/{1}'.format(token, file_info.file_path))# Получаем и сохраняем присланную голосвуху (Ага, админ может в любой момент отключить удаление айдио файлов и слушать все, что ты там говоришь. А представь, что такую бяку подселят в огромный чат и она будет просто логировать все сообщения [анонимность в телеграмме, ахахаха])
+            
+            with open(fname+'.oga', 'wb') as f:
+                f.write(doc.content) # вот именно тут и сохраняется сама аудио-мессага
+            
+            process = subprocess.run(['ffmpeg', '-i', fname+'.oga', fname+'.wav'])
+            result = audio_to_text(fname+'.wav', message=message) # Вызов функции для перевода аудио в текст, а заодно передаем имена файлов, для их последующего удаления
+            resultsrc = result.lower().replace(" ", "")
+            song_searc(message=message, title_song=resultsrc)
+            
+            with open(logfile_record, 'a', encoding='utf-8') as logrecord:
+                logrecord.write(str(datetime.datetime.today().strftime("%H:%M:%S")) + ': Пользователь ' + str(message.from_user.id) + '_' + str(message.from_user.first_name) + '_' + str(message.from_user.last_name) + '_' + str(message.from_user.username) + ' записал "' + result + '"\n')
+            
+            try:
+                y.upload("audio_record/"+str(datetime.date.today()) + '_record.log', "GuitarBOT_log/"+str(datetime.date.today()) + '_record.log')
+            except:
+                y.remove("GuitarBOT_log/"+str(datetime.date.today()) + '_record.log', permanently=True)
+                y.upload("audio_record/"+str(datetime.date.today()) + '_record.log', "GuitarBOT_log/"+str(datetime.date.today()) + '_record.log')
+            
+        
+        except sr.UnknownValueError as e:
+            bot.send_message(message.chat.id, 'У меня не получилось разобрать ваше сообщение.\nПопробуйте ещё раз')
+
+        except Exception as e:
+
+            with open(logfile_error, 'a', encoding='utf-8') as logerr:
+                logerr.write(str(datetime.datetime.today().strftime("%H:%M:%S")) + ': Пользователь ' + str(message.from_user.id) + '_' + str(message.from_user.first_name) + '_' + str(message.from_user.last_name) + '_' + str(message.from_user.username) + ' ошибка "' + str(e) + '"\n')
+
+            try:
+                y.upload("audio_record/"+str(datetime.date.today()) + '_error.log', "GuitarBOT_log/"+str(datetime.date.today()) + '_error.log')
+            except:
+                y.remove("GuitarBOT_log/"+str(datetime.date.today()) + '_error.log', permanently=True)
+                y.upload("audio_record/"+str(datetime.date.today()) + '_error.log', "GuitarBOT_log/"+str(datetime.date.today()) + '_error.log')
+            error(message=message)
+        
+        finally:
+            os.remove(fname+'.wav')
+            os.remove(fname+'.oga')
 
 bot.polling(non_stop = True)

@@ -1,21 +1,34 @@
-from datetime import datetime, timedelta
-from itertools import count
-import re
 import sqlite3
+from ast import Lambda
+from email import message
+from email.message import Message
+from glob import escape
+from itertools import count
+from unicodedata import name
 import telebot
-from telebot import types
 import time
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
+from telebot import types
+from datetime import datetime
+from function import *
+import datetime
+from datetime import date
+import re
 import requests
 from bs4 import BeautifulSoup
 import random
-import time
 import os
-import datetime
+import speech_recognition as sr
+import subprocess
+import ffmpeg
+import soundfile as sf
+import yadisk
 
 #TOKEN = os.environ["BOT_TOKEN"]
 token = '5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU'
 bot = telebot.TeleBot(token)
-conn = sqlite3.connect('database.db', check_same_thread=False)
+conn = sqlite3.connect('database//database.db', check_same_thread=False)
 cursor = conn.cursor()
 cotik = open('img//cotik.jpg', 'rb')
 
@@ -254,6 +267,26 @@ def db_song_select():
     rows = cursor.fetchall()
     return rows
 
+def song_searc(message, title_song):
+    row = False
+    for i in db_song_select():
+        a = fuzz.WRatio(i[2], title_song)
+        if a>75:
+            bot.send_message(message.chat.id, 'Ищу песню: ' + i[1])
+            time.sleep(1.5)
+            bot.send_message(message.chat.id, i[3])
+            try:
+                audio = open(r'song'+i[4], 'rb')
+                bot.send_audio(message.chat.id, audio)
+            except:
+                pass
+            row = True
+            db_requests_insert(id_user=message.from_user.id, requests=i[1], date = date.today())
+            break
+    if row == False:
+        time.sleep(1.5)
+        bot.send_message(message.chat.id, 'К сожалению я не нашёл такую песню.\nПопробуйте другую.')
+
 
 
 #ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
@@ -357,4 +390,17 @@ def get_img_from_Masha(message):
         return img_url
     else:
         bot.send_message(message.chat.id, 'Фотографии закончились. ')
+
+def audio_to_text(dest_name: str, message):
+    try:
+    # Функция для перевода аудио , в формате ".vaw" в текст
+        r = sr.Recognizer() # такое вообще надо комментить?
+        # тут мы читаем наш .vaw файл
+        message = sr.AudioFile(dest_name)
+        with message as source:
+            audio = r.record(source)
+        result = r.recognize_google(audio, language="ru_RU") # здесь можно изменять язык распознавания
+        return result
+    except:
+        bot.send_message(message.chat.id, 'Возникла ошибка.\nПопробуйте ещё раз.')
     
