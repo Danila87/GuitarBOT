@@ -21,7 +21,6 @@ import os
 import speech_recognition as sr
 import subprocess
 import ffmpeg
-import soundfile as sf
 import yadisk
 
 #Служебные данные для бота

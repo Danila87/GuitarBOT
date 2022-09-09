@@ -14,16 +14,13 @@ from datetime import datetime
 from function import *
 import datetime
 from datetime import date
-import re
 import requests
 from bs4 import BeautifulSoup
 import random
 import os
 import speech_recognition as sr
-import subprocess
 import ffmpeg
-import soundfile as sf
-import yadisk
+
 
 #TOKEN = os.environ["BOT_TOKEN"]
 token = '5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU'
