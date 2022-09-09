@@ -29,8 +29,8 @@ token = '5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU'
 yandex_token = 'y0_AgAAAAAO_DuQAAhmIAAAAADOUpN38O9Jqe8fTx275pqgdwJIP-pbvR8'
 y = yadisk.YaDisk(token=yandex_token)
 bot = telebot.TeleBot(token)
-logfile_record = 'audio_record/' +  str(datetime.date.today()) + '_record.log'
-logfile_error = 'audio_record/' + str(datetime.date.today()) + '_error.log'
+logfile_record = 'audio_record//' +  str(datetime.date.today()) + '_record.log'
+logfile_error = 'audio_record//' + str(datetime.date.today()) + '_error.log'
 #Текущие даты
 now = datetime.datetime.now()
 year = str(now.year)
@@ -705,7 +705,7 @@ def search_song(message):
             file_info = bot.get_file(message.voice.file_id)
             path = os.path.splitext(file_info.file_path)[0] # Вот тут-то и полный путь до файла (например: voice/file_2.oga)
             fname = os.path.basename(path) # Преобразуем путь в имя файла (например: file_2.oga)
-            fname = 'audio_record/'+fname
+            fname = 'audio_record//'+fname
             print(fname)
             doc = requests.get('https://api.telegram.org/file/bot{0}/{1}'.format(token, file_info.file_path))# Получаем и сохраняем присланную голосвуху (Ага, админ может в любой момент отключить удаление айдио файлов и слушать все, что ты там говоришь. А представь, что такую бяку подселят в огромный чат и она будет просто логировать все сообщения [анонимность в телеграмме, ахахаха])
             
