@@ -299,7 +299,7 @@ def user_profile_slow(message):
     except:
         bot.send_message(message.chat.id, 'Не нашёл ваши данные:(\nВозможно вы не зарегистрированы. Введите /start для регистрации')
 
-        
+
 #Пересылка различных сообщений пользователям
 @bot.message_handler(func=lambda message: message.text == "Переслать сообщение")
 def forward_message_start(message):
@@ -716,6 +716,7 @@ def Masha_hub(message):
 #Помощь
 @bot.message_handler(func = lambda message: message.text == 'Помощь')
 def help (message):
+    
     bot.send_message(message.chat.id, 'ПОМОЩЬ\n\n• Бот создан для облегчения поиска песен из песенника. Для того чтобы найти песню просто введите её название, можно с ошибками но незначительными:)\n\n• Если у вас неожиданно пропало меню или по какой-то причине не оно открылось отправьте боту "Меню" и он его перезапустит.\n\n• В случае если бот не работает должным образом и выдаёт ошибку то вы можете написать администратору (В случае ошибки бот пришлёт на него ссылку) либо оставить отзыв с описанием проблемы.\n\n• Если программой предусмотрено, что у вас недостаточно прав для выполнения определённых функций то бот пришлёт вам ошибку с котиком :)\n\n• Если у вас есть пожелания по поводу улучшения работы бота или вы просто хотите оставить благодарность, то для этого вы можете написать отзыв через соответствующую команду!)')
 
 
@@ -775,5 +776,14 @@ def search_song(message):
         finally:
             os.remove(fname+'.wav')
             os.remove(fname+'.oga')
+
+#Вывод текста песни через кнопку
+@bot.callback_query_handler(func=lambda call: call.data in [x[1] for x in db_song_select_all()])
+def call_data(call):
+
+    rows = db_song_select(title_song=call.data)
+    bot.send_message(call.message.chat.id, rows[1].upper() + '\n\n' + rows[3])
+    db_requests_insert(id_user=call.message.from_user.id, requests=rows[1], date = date.today())
+
 
 bot.polling(non_stop = True)

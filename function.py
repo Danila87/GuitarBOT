@@ -258,32 +258,43 @@ def db_event_select_last(type_event: str):
 
 #ВСЕ ФУНКЦИИ РАБОТЫ С ПЕСНЯМИ
 
-#Поиск песни
-def db_song_select():
+#Поиск всех песен
+def db_song_select_all():
     cursor.execute('SELECT * FROM songs')
     rows = cursor.fetchall()
     return rows
 
+#Поиск песни по заголовку
+def db_song_select(title_song):
+    cursor.execute('SELECT * FROM songs WHERE Title_song = ?',(title_song,))
+    rows = cursor.fetchone()
+    return rows
+
+#Отбор песен
 def song_searc(message, title_song):
-    row = False
-    for i in db_song_select():
+
+    keyboard = types.InlineKeyboardMarkup()
+    key = False
+
+    for i in db_song_select_all():
         a = fuzz.WRatio(i[2], title_song)
         if a>75:
-            bot.send_message(message.chat.id, 'Ищу песню: ' + i[1])
-            time.sleep(1.5)
-            bot.send_message(message.chat.id, i[3])
-            try:
-                audio = open(r'song'+i[4], 'rb')
-                bot.send_audio(message.chat.id, audio)
-            except:
-                pass
-            row = True
-            db_requests_insert(id_user=message.from_user.id, requests=i[1], date = date.today())
+            bot.send_message(message.chat.id, 'Вы ввели: ' + title_song)
+            key = True
             break
-    if row == False:
-        time.sleep(1.5)
-        bot.send_message(message.chat.id, 'К сожалению я не нашёл такую песню.\nПопробуйте другую.')
 
+    if key == False:
+        time.sleep(1)
+        bot.send_message(message.chat.id, 'К сожалению я не разобрал ваш запрос.\nПопробуйте ещё раз.')
+
+    if key == True:
+        for i in db_song_select_all():
+                a = fuzz.WRatio(i[2], title_song)
+                if a>75:
+                    btn = types.InlineKeyboardButton(i[1], callback_data=i[1])
+                    keyboard.add(btn)
+        time.sleep(1)
+        bot.send_message(message.chat.id, "Вот что я нашёл:", reply_markup = keyboard)
 
 
 #ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
@@ -401,4 +412,3 @@ def audio_to_text(dest_name: str, message):
         return result
     except:
         bot.send_message(message.chat.id, 'Возникла ошибка.\nПопробуйте ещё раз.')
-    
