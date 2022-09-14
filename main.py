@@ -287,15 +287,19 @@ def user_newsletter_edit(message):
 #Вывод данных пользователя
 @bot.message_handler(func=lambda message: message.text == "Показать мои данные")
 def user_profile_slow(message):
-    rows = db_user_select_by_id(message.from_user.id)
+    try:
+        rows = db_user_select_by_id(message.from_user.id)
 
-    if rows[4] == 0:
-        newsletter_subscription = "Отключена"
-    else:
-        newsletter_subscription = "Подключена"
+        if rows[4] == 0:
+            newsletter_subscription = "Отключена"
+        else:
+            newsletter_subscription = "Подключена"
 
-    bot.send_message(message.chat.id, "Ваш ID: " + "*"+str(rows[0])+"*" + "\n" + "Ваше имя: " + str(rows[1]) + "\n" + "Ваша фамилия: " + str(rows[2]) + "\n" + "Ваш никнейм: " + str(rows[3]) + "\n" + "Ваш статус: " + rows [7] + "\n" + "Подписка на рассылку: " + newsletter_subscription, parse_mode="Markdown")
+        bot.send_message(message.chat.id, "Ваш ID: " + "*"+str(rows[0])+"*" + "\n" + "Ваше имя: " + str(rows[1]) + "\n" + "Ваша фамилия: " + str(rows[2]) + "\n" + "Ваш никнейм: " + str(rows[3]) + "\n" + "Ваш статус: " + rows [7] + "\n" + "Подписка на рассылку: " + newsletter_subscription, parse_mode="Markdown")
+    except:
+        bot.send_message(message.chat.id, 'Не нашёл ваши данные:(\nВозможно вы не зарегистрированы. Введите /start для регистрации')
 
+        
 #Пересылка различных сообщений пользователям
 @bot.message_handler(func=lambda message: message.text == "Переслать сообщение")
 def forward_message_start(message):
@@ -501,7 +505,7 @@ def event_create_start(message):
 
     rows = db_user_select_by_id(message.from_user.id)
 
-    if rows[6] == 1 or rows [6] == 2:
+    if rows[6] in (1,2):
 
         keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard=True)
         btn = []
@@ -538,11 +542,11 @@ def date_event_technical (message, type_event):
     if message.text == "Назад":
         keyboard_admin(message)
 
-    else:
+    elif message.content_type == 'text':
         date_event = message.text
         date_event = date_event.title()
 
-        result = re.match(r'(\b[0-9]\b (Января|Февраля|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декарбря))|(\b[12][0-9]\b (Января|Февраля|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декарбря))|(\b3[01]\b (Января|Февраля|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декарбря))', date_event)
+        result = re.match(r'(\b[1-9]\b (Января|Февраля|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декарбря)|(\b[12][0-9]\b (Января|Февраля|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декарбря))|\b3[01]\b (Января|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декарбря))', date_event)
 
         if result == None:
             sent = bot.send_message(message.chat.id, "Вы ввели некорректную дату.\n Попробуйте ещё раз.")
@@ -552,13 +556,18 @@ def date_event_technical (message, type_event):
         else:
             sent = bot.send_message(message.chat.id, "Введите техническую дату в формате '2022-01-01' после которой мероприятие будет не актуально.")
             bot.register_next_step_handler(sent, text_event, type_event, date_event)
-    
+    else:
+        sent = bot.send_message(message.chat.id, 'Я принимаю только текст!)')
+        bot.register_next_step_handler(sent, date_event_technical, type_event)
+        time.sleep (1.5)
+        bot.send_message(message.chat.id, "Введите дату декоративную.\nНапример '6 апреля'")
+
 def text_event(message, type_event, date_event):
 
     if message.text == "Назад":
         keyboard_admin(message)
     
-    else:
+    elif message.content_type == 'text':
         date_technical = message.text
         result = re.match(r'([12]\d\d\d)\-(0[1-9]|1[12])\-(0[1-9]|[12]\d|3[12])', date_technical)
 
@@ -570,21 +579,34 @@ def text_event(message, type_event, date_event):
         else:
             sent = bot.send_message(message.chat.id, "Введите текст события")
             bot.register_next_step_handler(sent, event_preview, type_event, date_event, date_technical)
+    else:
+        sent = bot.send_message(message.chat.id, 'Я принимаю только текст!)')
+        bot.register_next_step_handler(sent, text_event, type_event, date_event)
+        time.sleep (1.5)
+        bot.send_message(message.chat.id, "Введите техническую дату в формате '2022-01-01' после которой мероприятие будет не актуально.")
 
 def event_preview(message, type_event, date_event, date_event_technical):
 
     text_event = message.text
-    result = re.match(r'(\s+|^)[пПnрРp]?[3ЗзВBвПnпрРpPАaAаОoO0о]?[сСcCиИuUОoO0оАaAаыЫуУyтТT]?[Ппn][иИuUeEеЕ][зЗ3][ДдDd]\w*[\?\,\.\;\-]*|(\s+|^)[рРpPпПn]?[рРpPоОoO0аАaAзЗ3]?[оОoO0иИuUаАaAcCсСзЗ3тТTуУy]?[XxХх][уУy][йЙеЕeEeяЯ9юЮ]\w*[\?\,\.\;\-]*|(\s+|^)[бпПnБ6][лЛ][яЯ9]([дтДТDT]\w*)?[\?\,\.\;\-]*|(\s+|^)(([зЗоОoO03]?[аАaAтТT]?[ъЪ]?)|(\w+[оОOo0еЕeE]))?[еЕeEиИuUёЁ][бБ6пП]([аАaAиИuUуУy]\w*)?[\?\,\.\;\-]*', text_event)
 
-    if result == None:
-        bot.send_message(message.chat.id, "Предпросмотр события: ")
-        time.sleep(1)
-        bot.send_message(message.chat.id, "Тип события: " + type_event + '\nДата события: ' + date_event + '\nТекст события:\n' + text_event + '\nТехническая дата: ' + date_event_technical)
-        time.sleep(1)
-        sent = bot.send_message(message.chat.id, "Сохранить событие?", reply_markup=keyboard_yes_no(message))
-        bot.register_next_step_handler(sent, save_event, type_event, date_event, text_event, date_event_technical)
-    else:
-        sent = bot.send_message(message.chat.id, "В вашем тексте обнаружен мат!\nВведите текст заново.")
+    if message.content_type == 'text':
+
+        result = re.match(r'(\s+|^)[пПnрРp]?[3ЗзВBвПnпрРpPАaAаОoO0о]?[сСcCиИuUОoO0оАaAаыЫуУyтТT]?[Ппn][иИuUeEеЕ][зЗ3][ДдDd]\w*[\?\,\.\;\-]*|(\s+|^)[рРpPпПn]?[рРpPоОoO0аАaAзЗ3]?[оОoO0иИuUаАaAcCсСзЗ3тТTуУy]?[XxХх][уУy][йЙеЕeEeяЯ9юЮ]\w*[\?\,\.\;\-]*|(\s+|^)[бпПnБ6][лЛ][яЯ9]([дтДТDT]\w*)?[\?\,\.\;\-]*|(\s+|^)(([зЗоОoO03]?[аАaAтТT]?[ъЪ]?)|(\w+[оОOo0еЕeE]))?[еЕeEиИuUёЁ][бБ6пП]([аАaAиИuUуУy]\w*)?[\?\,\.\;\-]*', text_event)
+
+        if result == None:
+            bot.send_message(message.chat.id, "Предпросмотр события: ")
+            time.sleep(1)
+            bot.send_message(message.chat.id, "Тип события: " + type_event + '\nДата события: ' + date_event + '\nТекст события:\n' + text_event + '\nТехническая дата: ' + date_event_technical)
+            time.sleep(1)
+            sent = bot.send_message(message.chat.id, "Сохранить событие?", reply_markup=keyboard_yes_no(message))
+            bot.register_next_step_handler(sent, save_event, type_event, date_event, text_event, date_event_technical)
+        else:
+            sent = bot.send_message(message.chat.id, "В вашем тексте обнаружен мат!\nВведите текст заново.")
+            bot.register_next_step_handler(sent, event_preview, type_event, date_event, date_event_technical)
+            time.sleep(1.5)
+            bot.send_message(message.chat.id, "Введите текст события")
+    else: 
+        sent = bot.send_message(message.chat.id, 'Я принимаю только текст!)')
         bot.register_next_step_handler(sent, event_preview, type_event, date_event, date_event_technical)
         time.sleep(1.5)
         bot.send_message(message.chat.id, "Введите текст события")
@@ -610,6 +632,10 @@ def save_event(message, type_event, date_event, text_event, date_event_technical
         sent = bot.send_message(message.chat.id, "Создать заново?", reply_markup=keyboard_yes_no(message))
         bot.register_next_step_handler(sent, event_hub)
 
+    else:
+        sent = bot.send_message(message.chat.id, 'Я вас непонимаю. Введите "Да" или "Нет"')
+        bot.register_next_step_handler(sent, event_preview, type_event, date_event, date_event_technical)
+
 def event_hub(message):
 
     if message.text == "Да":
@@ -629,6 +655,10 @@ def event_newsletter(message, type_event):
 
     elif message.text == "Нет":
         keyboard_admin(message)
+
+    else:  
+        sent = bot.send_message(message.chat.id, 'Я вас непонимаю. Введите "Да" или "Нет"')
+        bot.register_next_step_handler(sent, event_newsletter, type_event)
 
 
 #Вывод ближайших событий

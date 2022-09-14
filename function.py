@@ -68,7 +68,7 @@ def keyboard_yes_no(message):
 #Подменю настроек
 def keyboard_setting_submenu(message, text):
     rows = db_user_select_by_id(id_user = message.from_user.id)
-    keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard = True)
+    keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard = True)
     btn1 = types.KeyboardButton(text = "Показать мои данные")
     btn5 = types.KeyboardButton(text = "Песенники")
     btn6 = types.KeyboardButton(text = "Помощь")
@@ -88,7 +88,7 @@ def keyboard_setting_submenu(message, text):
 #Подменю "События"
 def keyboard_event_submenu(message):
     rows = db_user_select_by_id(id_user = message.from_user.id)
-    keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard=True)
+    keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard=True)
     btn1 = types.KeyboardButton(text = "Показать ближайшие события")
     btn3 = types.KeyboardButton(text = "Назад")
     if rows[6] == 1 or rows[6] == 2:
@@ -106,7 +106,7 @@ def keyboard_review_submenu(message):
 
     if rows[6] == 1 or rows[6] == 2:
         rows = db_user_select_by_id(id_user = message.from_user.id)
-        keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard = True)
+        keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard = True)
         btn1 = types.KeyboardButton(text = "Показать отзывы")
         btn2 = types.KeyboardButton(text = "Оставить отзыв")
         btn3 = types.KeyboardButton(text = "Назад")
@@ -121,7 +121,7 @@ def keyboard_admin_edit_submenu(message):
     rows = db_user_select_by_id(id_user = message.from_user.id)
 
     if rows[6] == 1:
-        keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard = True)
+        keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard = True)
         btn1 = types.KeyboardButton(text = "Назад")
         btn2 = types.KeyboardButton(text = "Назначить администратором")
         btn3 = types.KeyboardButton(text = "Убрать администратора")
@@ -388,6 +388,7 @@ def get_img_from_Masha(message):
     else:
         bot.send_message(message.chat.id, 'Фотографии закончились. ')
 
+#Перевод аудио в текст
 def audio_to_text(dest_name: str, message):
     try:
     # Функция для перевода аудио , в формате ".vaw" в текст
