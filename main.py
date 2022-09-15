@@ -682,7 +682,7 @@ def list_of_songs(message):
 
     chat_id = message.chat.id
     list_song = []
-    for i in db_song_select():
+    for i in db_song_select_all():
         list_song.append(i[1]+'\n')
         list_song.sort()
     bot.send_message(chat_id,'Вот доступный список песен:')
