@@ -340,11 +340,16 @@ def review(message):
     bot.register_next_step_handler(sent, review_save)
 
 def review_save(message):
-
-    id_user = message.from_user.id
-    user_text = message.text
-    db_review_insert(id_user = id_user, text_review = user_text, looked_status = 0, date = date.today())
-    bot.send_message(message.chat.id, 'Спасибо за ваш отзыв!')
+    if message.content_type == 'text':
+        id_user = message.from_user.id
+        user_text = message.text
+        db_review_insert(id_user = id_user, text_review = user_text, looked_status = 0, date = date.today())
+        bot.send_message(message.chat.id, 'Спасибо за ваш отзыв!')
+    else:
+        sent = bot.send_message(message.chat.id, 'Я принимаю только текст!)')
+        bot.register_next_step_handler(sent, review_save)
+        time.sleep (1)
+        bot.send_message(message.chat.id, 'Напишите следующим сообщением свой отзыв.')
 
 
 #Показать отзывы
@@ -353,17 +358,19 @@ def review_show(message):
 
     rows = db_user_select_by_id(message.from_user.id)
 
-    if rows[6] == 1:
+    if rows[6] in (1,2):
         review_list = []
         count = 0
         for i in db_review_select():
+            status = ""
             count = count + 1
-            review_list.append(str(count) + '. ' + i[2] + '\n' + 'Дата: ' + i[4] + '\n\n')
-            db_review_update(id_review=i[0])
-        if len(review_list) == 0:
-            bot.send_message(message.chat.id, "Вы посмотрели все отзывы")
-        else:
-            bot.send_message(message.chat.id, (''.join(review_list)))
+            if i[3] == 0:  
+                status = "*⚡️НОВЫЙ ОТЗЫВ⚡️*"
+                db_review_update(id_review=i[0])
+            elif i[3] == 1:
+                status = "Просмотрено"
+            review_list.append( str(count) + '. ' + status + '\n' 'Пользователь '+ i[6] + ' ' + i[7]  + ' оставил следующий отзыв:\n\n"_'+i[2]+'_"'+'\n*дата: ' + i[4] + '*\n\n')
+        bot.send_message(message.chat.id, (''.join(review_list)), parse_mode="Markdown")
     else:
         error(message = message)
 
@@ -666,15 +673,18 @@ def event_newsletter(message, type_event):
 def event_show(message):
 
     count = 0
+    key = False
     for i in db_types_events():
         count = count + 1
         try:
             event = db_event_select_last(type_event = count)
             bot.send_message(message.chat.id, event[2] + " состоится " + event[6].lower() + " !\n" + event[1])
             time.sleep(0.5)
+            key = True
         except:
             pass
-
+    if key == False:
+        bot.send_message(message.chat.id, 'Новых событий пока нет')
 
 #Список песен
 @bot.message_handler(func=lambda message: message.text == 'Список песен')

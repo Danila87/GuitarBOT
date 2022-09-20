@@ -186,6 +186,9 @@ def db_all_admin_select():
     rows = cursor.fetchall()
     return rows
     
+
+
+
 #ВСЕ ФУНКЦИИ РАБОТЫ С ОТЗЫВАМИ
 
 #Вставка отзывов
@@ -195,7 +198,7 @@ def db_review_insert(id_user:int, text_review: str, looked_status: int, date:str
 
 #Поиск отзывов
 def db_review_select():
-    cursor.execute('SELECT * FROM Reviews WHERE lookeed_status = 0 ')
+    cursor.execute("SELECT * FROM Reviews LEFT OUTER JOIN Users ON Reviews.id_user = Users.id_user WHERE date > date('now', '-7 days')")
     rows = cursor.fetchall()
     return rows
 
@@ -248,9 +251,9 @@ def db_event_insert(dtype_event: int, ddate_event: str, dtext_event: str, ddate_
     cursor.execute("INSERT INTO Events (Text_event, Date_event, Date_event_technical ,Event_type) VALUES (?, ?, ?, ?)", (dtext_event, ddate_event, ddate_event_techical ,dtype_event))
     conn.commit()
     
-#Получение последнего события 
+#Получение событий
 def db_event_select_last(type_event: str):
-    cursor.execute("SELECT * FROM Events LEFT OUTER JOIN Type_event ON Events.Event_type = Type_event.Id_event WHERE Event_type = ? ORDER BY Id_event DESC LIMIT 1", (type_event,))
+    cursor.execute("SELECT * FROM Events LEFT OUTER JOIN Type_event ON Events.Event_type = Type_event.Id_event WHERE Event_type = ? AND Date_event_technical > date('now') ORDER BY Id_event DESC LIMIT 1", (type_event,))
     rows = cursor.fetchone()
     return rows
 
