@@ -90,11 +90,11 @@ def admin_menu(message):
 
 
 #Подменю
-@bot.message_handler(func = lambda message: message.text == "Вывести запросы" or message.text == "Назад")
+@bot.message_handler(func = lambda message: message.text == "Вывести запросы 📈" or message.text == "Назад")
 def submenu(message):
 
     rows = db_user_select_by_id(message.from_user.id)
-    if message.text == "Вывести запросы":
+    if message.text == "Вывести запросы 📈":
         if rows[6] == 1 or rows [6] == 2:
             KeyBoard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard = True)
             btn1 = types.KeyboardButton(text = "За день")
@@ -117,7 +117,7 @@ def submenu(message):
 
 
 #Все песенники
-@bot.message_handler(func = lambda message: message.text == 'Песенники')
+@bot.message_handler(func = lambda message: message.text == 'Песенники 📔')
 def send_pesennik_io_spo(message):
 
     keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard = True)
@@ -146,21 +146,21 @@ def main_menu(message):
 
 
 #Подменю "Администраторы"
-@bot.message_handler(func=lambda message: message.text == "Администраторы")
+@bot.message_handler(func=lambda message: message.text == "Администраторы 💼")
 def admin_edit_submenu(message):
 
     keyboard_admin_edit_submenu(message)
 
 
 #Подменю "События"
-@bot.message_handler(func = lambda message: message.text == "События")
+@bot.message_handler(func = lambda message: message.text == "События 📅")
 def event_submenu(message):
 
     keyboard_event_submenu(message)
 
 
 #Подменю "Отзывы"
-@bot.message_handler(func = lambda message: message.text == "Отзывы")
+@bot.message_handler(func = lambda message: message.text == "Отзывы 💬")
 def review_submenu(message):
 
     keyboard_review_submenu(message)
@@ -269,10 +269,10 @@ def show_all_administrators(message):
 
 
 #Подключение и отключение рассылки
-@bot.message_handler(func=lambda message: message.text == "Подключить рассылку" or message.text == "Отключить рассылку")
+@bot.message_handler(func=lambda message: message.text == "Подключить рассылку 🔔" or message.text == "Отключить рассылку 🔕")
 def user_newsletter_edit(message):
 
-    if message.text == "Подключить рассылку":
+    if message.text == "Подключить рассылку 🔔":
         db_user_newsletter_edit(id_user = message.from_user.id, status = 1)
         keyboard_setting_submenu(message, text = "Обновляю данные")
         time.sleep(1)
@@ -285,7 +285,7 @@ def user_newsletter_edit(message):
 
 
 #Вывод данных пользователя
-@bot.message_handler(func=lambda message: message.text == "Показать мои данные")
+@bot.message_handler(func=lambda message: message.text == "Показать мои данные 👤")
 def user_profile_slow(message):
     try:
         rows = db_user_select_by_id(message.from_user.id)
@@ -301,7 +301,7 @@ def user_profile_slow(message):
 
 
 #Пересылка различных сообщений пользователям
-@bot.message_handler(func=lambda message: message.text == "Переслать сообщение")
+@bot.message_handler(func=lambda message: message.text == "Переслать сообщение ✉️")
 def forward_message_start(message):
 
     rows = db_user_select_by_id(id_user =  message.from_user.id)
@@ -333,7 +333,7 @@ def forward_message_end(message):
 
 
 #Оставить отзыв
-@bot.message_handler(func=lambda message: message.text == 'Оставить отзыв')
+@bot.message_handler(func=lambda message: message.text == 'Оставить отзыв 💬')
 def review(message):
 
     sent = bot.send_message(message.chat.id, 'Напишите следующим сообщением свой отзыв.')
@@ -448,28 +448,40 @@ def requests_select_date(message):
 
     if rows[6] == 1 or rows [6] == 2:
         chat_id = message.chat.id
-        sent = bot.send_message(chat_id, 'Введите месяц')
+        sent = bot.send_message(chat_id, 'Введите месяц. Например "Май"')
         bot.register_next_step_handler(sent, requests_select_date_show)
     else:
         error(message = message)
 
 def requests_select_date_show(message):
 
-    month = message.text
-    requests_list = []
-    present_month = "'"+year+'-'+Months[month]+'-%'+"'"
-    row = len(db_requests_select_date(selected_date = present_month))
-    if row == 0:
-        bot.send_message(message.chat.id, "За выбранный период нет данных.\nПопробуйте позже.")
+    if message.content_type == 'text':
+        month = message.text
+        result = re.match(r'Январь\b|Февраль\b|Март\b|Апрель\b|Май\b|Июнь\b|Июль\b|Август\b|Сентябрь\b|Октябрь\b|Ноябрь\b|Декабрь\b', month)
+        if result != None:
+            requests_list = []
+            present_month = "'"+year+'-'+Months[month]+'-%'+"'"
+            row = len(db_requests_select_date(selected_date = present_month))
+            if row == 0:
+                bot.send_message(message.chat.id, "За выбранный период нет данных.\nПопробуйте позже.")
+            else:
+                for i in db_requests_select_date(selected_date = present_month):
+                    try:
+                        requests_list.append(i[0] + ' : ' + str(i[1]) + '\n')
+                        requests_list.sort()
+                    except:
+                        error(message = message)
+                bot.send_message(message.chat.id, (''.join(requests_list)))
+        else:
+            bot.send_message(message.chat.id, 'Ошибка ввода, попробуйте еще раз!)')
+            time.sleep(1)
+            sent = bot.send_message(message.chat.id, 'Введите месяц. Например "Май"')
+            bot.register_next_step_handler(sent, requests_select_date_show)
     else:
-        for i in db_requests_select_date(daselected_datete1 = present_month):
-            try:
-                requests_list.append(i[0] + ' : ' + str(i[1]) + '\n')
-                requests_list.sort()
-            except:
-                error(message = message)
-        bot.send_message(message.chat.id, (''.join(requests_list)))
-
+        bot.send_message(message.chat.id, 'Ошибка ввода, попробуйте еще раз!)')
+        time.sleep(1)
+        sent = bot.send_message(message.chat.id, 'Введите месяц. Например "Май"')
+        bot.register_next_step_handler(sent, requests_select_date_show)
 
 #Отчёт по запросам за выбранный период
 @bot.message_handler(func=lambda message : message.text == 'Отчёт за период')
@@ -483,28 +495,55 @@ def request_select_date_between(message):
         error(message = message)
 
 def date_between_start(message):
-   sent = bot.send_message(message.chat.id, "Введите конечную дату в формате '2022-01-01'")
-   start_date = message.text
-   bot.register_next_step_handler(sent, date_between_end, start_date)
+    if message.content_type == 'text':
+        start_date = message.text
+        result = re.match(r'([12]\d\d\d)\-(0[1-9]|1[12])\-(0[1-9]|[12]\d|3[12])', start_date)
+        if result != None:
+            sent = bot.send_message(message.chat.id, "Введите конечную дату в формате '2022-01-01'")
+            bot.register_next_step_handler(sent, date_between_end, start_date)
+        else:
+            bot.send_message(message.chat.id, 'Возникла ошибка ввода, попробуйте еще раз.')   
+            time.sleep(1)
+            sent = bot.send_message(message.chat.id, "Введите начальную дату в формате '2022-01-01'") 
+            bot.register_next_step_handler(sent, date_between_start)    
+    else:
+        bot.send_message(message.chat.id, 'Введите дату как в примере!)')   
+        time.sleep(1)
+        sent = bot.send_message(message.chat.id, "Введите начальную дату в формате '2022-01-01'") 
+        bot.register_next_step_handler(sent, date_between_start)  
 
 def date_between_end(message, start_date):
-    final_date = message.text
-    bot.send_message(message.chat.id, "Формирую отчёт...")
-    time.sleep(1)
-    start_date = "'" + start_date + "'"
-    final_date = "'" + final_date + "'"
-    requests_list = []
-    if len(db_request_select_date_between(start_date = start_date, final_date = final_date)) == 0:
-        bot.send_message(message.chat.id, "За выбранный период нет данных.\nПопробуйте позже.")
-    else:
-        try:
-            for i in db_request_select_date_between(start_date = start_date, final_date = final_date):
-                requests_list.append(i[0] + ' : ' + str(i[1]) + '\n')
-                requests_list.sort()
-            bot.send_message(message.chat.id, (''.join(requests_list)))
-        except:
-            error(message = message)
 
+    if message.content_type == 'text':
+        final_date = message.text
+        result = re.match(r'([12]\d\d\d)\-(0[1-9]|1[12])\-(0[1-9]|[12]\d|3[12])', start_date)
+
+        if result != None:
+            bot.send_message(message.chat.id, "Формирую отчёт...")
+            time.sleep(1)
+            start_date = "'" + start_date + "'"
+            final_date = "'" + final_date + "'"
+            requests_list = []
+            if len(db_request_select_date_between(start_date = start_date, final_date = final_date)) == 0:
+                bot.send_message(message.chat.id, "За выбранный период нет данных.\nПопробуйте позже.")
+            else:
+                try:
+                    for i in db_request_select_date_between(start_date = start_date, final_date = final_date):
+                        requests_list.append(i[0] + ' : ' + str(i[1]) + '\n')
+                        requests_list.sort()
+                    bot.send_message(message.chat.id, (''.join(requests_list)))
+                except:
+                    error(message = message)
+        else:
+            bot.send_message(message.chat.id, "Возникла ошибка ввода, попробуйте еще раз.")
+            time.sleep(1)
+            sent = bot.send_message(message.chat.id, "Введите начальную дату в формате '2022-01-01'") 
+            bot.register_next_step_handler(sent, date_between_end, start_date)
+    else:
+        bot.send_message(message.chat.id, "Введите дату как в примере!)")
+        time.sleep(1)
+        sent = bot.send_message(message.chat.id, "Введите начальную дату в формате '2022-01-01'") 
+        bot.register_next_step_handler(sent, date_between_end, start_date)
 
 #Вставка события и его рассылка
 @bot.message_handler(func=lambda message: message.text == "Создать событие")
@@ -687,7 +726,7 @@ def event_show(message):
         bot.send_message(message.chat.id, 'Новых событий пока нет')
 
 #Список песен
-@bot.message_handler(func=lambda message: message.text == 'Список песен')
+@bot.message_handler(func=lambda message: message.text == 'Список песен 📔')
 def list_of_songs(message):
 
     chat_id = message.chat.id
@@ -724,7 +763,7 @@ def Masha_hub(message):
 
 
 #Помощь
-@bot.message_handler(func = lambda message: message.text == 'Помощь')
+@bot.message_handler(func = lambda message: message.text == 'Помощь ❓')
 def help (message):
     
     bot.send_message(message.chat.id, 'ПОМОЩЬ\n\n• Бот создан для облегчения поиска песен из песенника. Для того чтобы найти песню просто введите её название, можно с ошибками но незначительными:)\n\n• Если у вас неожиданно пропало меню или по какой-то причине не оно открылось отправьте боту "Меню" и он его перезапустит.\n\n• В случае если бот не работает должным образом и выдаёт ошибку то вы можете написать администратору (В случае ошибки бот пришлёт на него ссылку) либо оставить отзыв с описанием проблемы.\n\n• Если программой предусмотрено, что у вас недостаточно прав для выполнения определённых функций то бот пришлёт вам ошибку с котиком :)\n\n• Если у вас есть пожелания по поводу улучшения работы бота или вы просто хотите оставить благодарность, то для этого вы можете написать отзыв через соответствующую команду!)')

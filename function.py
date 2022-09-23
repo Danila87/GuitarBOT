@@ -37,11 +37,11 @@ cotik = open('img//cotik.jpg', 'rb')
 #Админ меню
 def keyboard_admin(message):
     Keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard=True)
-    btn2 = types.KeyboardButton(text = "Список песен")
-    btn3 = types.KeyboardButton(text = "Отзывы")
-    btn5 = types.KeyboardButton(text = "Вывести запросы")
-    btn6 = types.KeyboardButton(text = "События")
-    btn8 = types.KeyboardButton(text = "Переслать сообщение")
+    btn2 = types.KeyboardButton(text = "Список песен 📔")
+    btn3 = types.KeyboardButton(text = "Отзывы 💬")
+    btn5 = types.KeyboardButton(text = "Вывести запросы 📈")
+    btn6 = types.KeyboardButton(text = "События 📅")
+    btn8 = types.KeyboardButton(text = "Переслать сообщение ✉️")
     btn1 = types.KeyboardButton(text = "Настройки ⚙️")
     Keyboard.add(btn2, btn3, btn5, btn6, btn8 ,btn1)
     time.sleep(1)
@@ -50,9 +50,9 @@ def keyboard_admin(message):
 #Пользовательское меню 
 def keyboard_user(message):
     Keyboard = types.ReplyKeyboardMarkup(row_width = 3, resize_keyboard=True)
-    btn2 = types.KeyboardButton(text = "Список песен")
-    btn3 = types.KeyboardButton(text = "Оставить отзыв")
-    btn4 = types.KeyboardButton(text = "События")
+    btn2 = types.KeyboardButton(text = "Список песен 📔")
+    btn3 = types.KeyboardButton(text = "Оставить отзыв 💬")
+    btn4 = types.KeyboardButton(text = "События 📅")
     btn1 = types.KeyboardButton(text = "Настройки ⚙️")
     Keyboard.add(btn2, btn3, btn4, btn1)
     bot.send_message(message.chat.id, "Открываю меню", reply_markup = Keyboard)
@@ -69,16 +69,16 @@ def keyboard_yes_no(message):
 def keyboard_setting_submenu(message, text):
     rows = db_user_select_by_id(id_user = message.from_user.id)
     keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard = True)
-    btn1 = types.KeyboardButton(text = "Показать мои данные")
-    btn5 = types.KeyboardButton(text = "Песенники")
-    btn6 = types.KeyboardButton(text = "Помощь")
+    btn1 = types.KeyboardButton(text = "Показать мои данные 👤")
+    btn5 = types.KeyboardButton(text = "Песенники 📔")
+    btn6 = types.KeyboardButton(text = "Помощь ❓")
     btn4 = types.KeyboardButton(text = "Назад")
     if rows[4] == 0:
-        btn2 = types.KeyboardButton(text = "Подключить рассылку")
+        btn2 = types.KeyboardButton(text = "Подключить рассылку 🔔")
     else:
-        btn2 = types.KeyboardButton(text = "Отключить рассылку")
+        btn2 = types.KeyboardButton(text = "Отключить рассылку 🔕")
     if rows[6] == 1:
-        btn3 = types.KeyboardButton(text = "Администраторы")
+        btn3 = types.KeyboardButton(text = "Администраторы 💼")
         keyboard.add(btn1, btn2, btn3, btn5, btn6, btn4)
         bot.send_message(message.chat.id, text, reply_markup = keyboard)
     else:
