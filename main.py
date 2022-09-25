@@ -832,6 +832,12 @@ def call_data(call):
 
     rows = db_song_select(title_song=call.data)
     bot.send_message(call.message.chat.id, rows[1].upper() + '\n\n' + rows[3])
+    try:
+        audio = open(r'song'+rows[4], 'rb')
+        bot.send_audio(call.message.chat.id, audio, title=rows[1])
+        audio.close()
+    except:
+        pass
     db_requests_insert(id_user=call.message.from_user.id, requests=rows[1], date = date.today())
 
 
