@@ -729,15 +729,17 @@ def event_show(message):
 @bot.message_handler(func=lambda message: message.text == 'Список песен 📔')
 def list_of_songs(message):
 
-    chat_id = message.chat.id
-    list_song = []
-    for i in db_song_select_all():
-        list_song.append(i[1]+'\n')
-        list_song.sort()
-    bot.send_message(chat_id,'Вот доступный список песен:')
-    time.sleep(1.5)
-    bot.send_message(chat_id,(''.join(list_song)))
-
+    try:
+        chat_id = message.chat.id
+        list_song = []
+        for i in db_song_select_all():
+            list_song.append(i[1]+'\n')
+            list_song.sort()
+        bot.send_message(chat_id,'Вот доступный список песен:')
+        time.sleep(1.5)
+        bot.send_message(chat_id,(''.join(list_song)))
+    except:
+        pass
 
 #Вывод картинки для Маши
 @bot.message_handler(commands = ['Masha'])

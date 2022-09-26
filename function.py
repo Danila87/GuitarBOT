@@ -4,6 +4,7 @@ from email import message
 from email.message import Message
 from glob import escape
 from itertools import count
+from types import NoneType
 from unicodedata import name
 import telebot
 import time
@@ -28,7 +29,6 @@ bot = telebot.TeleBot(token)
 conn = sqlite3.connect('database//database.db', check_same_thread=False)
 cursor = conn.cursor()
 cotik = open('img//cotik.jpg', 'rb')
-
 
 
 
@@ -73,7 +73,7 @@ def keyboard_setting_submenu(message, text):
     btn5 = types.KeyboardButton(text = "Песенники 📔")
     btn6 = types.KeyboardButton(text = "Помощь ❓")
     btn4 = types.KeyboardButton(text = "Назад")
-    if rows[4] == 0:
+    if rows[4] == 0 and rows != NoneType:
         btn2 = types.KeyboardButton(text = "Подключить рассылку 🔔")
     else:
         btn2 = types.KeyboardButton(text = "Отключить рассылку 🔕")
@@ -91,7 +91,7 @@ def keyboard_event_submenu(message):
     keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard=True)
     btn1 = types.KeyboardButton(text = "Показать ближайшие события")
     btn3 = types.KeyboardButton(text = "Назад")
-    if rows[6] == 1 or rows[6] == 2:
+    if rows[6] == 1 or rows[6] == 2 and rows != NoneType:
         btn2 = types.KeyboardButton(text = "Создать событие")
         keyboard.add(btn1, btn2, btn3)
         bot.send_message(message.chat.id, "Открываю", reply_markup = keyboard)
@@ -155,10 +155,12 @@ def db_user_select():
 
 #Конкретный человек по айди
 def db_user_select_by_id(id_user:int):
-    cursor.execute("SELECT * FROM Users LEFT OUTER JOIN Role ON Users.Id_role = Role.Id_role WHERE id_user = ?", (id_user,))
-    rows = cursor.fetchone()
-    return rows
-
+    try:
+        cursor.execute("SELECT * FROM Users LEFT OUTER JOIN Role ON Users.Id_role = Role.Id_role WHERE id_user = ?", (id_user,))
+        rows = cursor.fetchone()
+        return rows
+    except:
+        pass
 #Внесение данных о новом пользователе
 def db_user_insert(id_user: int, first_name: str, last_name:str, nickname: str, event_status: int):
     cursor.execute('INSERT INTO Users (id_user, First_name, Last_name, Nickname, Event_status, Id_role) VALUES (?,?,?,?,?,3)', (id_user, first_name, last_name, nickname, event_status))
@@ -263,9 +265,13 @@ def db_event_select_last(type_event: str):
 
 #Поиск всех песен
 def db_song_select_all():
-    cursor.execute('SELECT * FROM songs')
-    rows = cursor.fetchall()
-    return rows
+    cursors = conn.cursor()
+    try:
+        cursors.execute('SELECT * FROM songs')
+        rows = cursors.fetchall()
+        return rows
+    except:
+        pass
 
 #Поиск песни по заголовку
 def db_song_select(title_song):
