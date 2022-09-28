@@ -1,4 +1,4 @@
-import sqlite3
+from bs4 import BeautifulSoup
 from ast import Lambda
 from email import message
 from email.message import Message
@@ -6,100 +6,115 @@ from glob import escape
 from itertools import count
 from types import NoneType
 from unicodedata import name
-import telebot
-import time
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 from telebot import types
 from datetime import datetime
 from function import *
-import datetime
 from datetime import date
+
 import requests
-from bs4 import BeautifulSoup
 import random
 import os
 import speech_recognition as sr
 import ffmpeg
-
+import sqlite3
+import telebot
+import time
+import datetime
 
 #TOKEN = os.environ["BOT_TOKEN"]
-token = '5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU'
-bot = telebot.TeleBot(token)
+TOKEN = '5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU'
+bot = telebot.TeleBot(TOKEN, skip_pending=True)
 conn = sqlite3.connect('database//database.db', check_same_thread=False)
-cursor = conn.cursor()
 cotik = open('img//cotik.jpg', 'rb')
 
 
+def registration(message):
+    rows = db_user_select_by_id(id_user = message.from_user.id)
+    if rows == None:
+        id_user = message.from_user.id
+        first_name = message.from_user.first_name
+        last_name = message.from_user.last_name
+        nickname = message.from_user.username
+        db_user_insert(id_user=id_user, first_name=first_name, last_name=last_name, nickname=nickname, event_status=0)
 
-#РАЗЛИЧНЫЕ МЕНЮ ПОЛЬЗОВАТЕЛЕЙ
 
-#Админ меню
+# РАЗЛИЧНЫЕ МЕНЮ ПОЛЬЗОВАТЕЛЕЙ
+
+
+# Админ меню
 def keyboard_admin(message):
     Keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard=True)
-    btn2 = types.KeyboardButton(text = "Список песен 📔")
-    btn3 = types.KeyboardButton(text = "Отзывы 💬")
-    btn5 = types.KeyboardButton(text = "Вывести запросы 📈")
-    btn6 = types.KeyboardButton(text = "События 📅")
-    btn8 = types.KeyboardButton(text = "Переслать сообщение ✉️")
-    btn1 = types.KeyboardButton(text = "Настройки ⚙️")
+    btn2 = types.KeyboardButton(text="Список песен 📔")
+    btn3 = types.KeyboardButton(text="Отзывы 💬")
+    btn5 = types.KeyboardButton(text="Вывести запросы 📈")
+    btn6 = types.KeyboardButton(text="События 📅")
+    btn8 = types.KeyboardButton(text="Переслать сообщение ✉️")
+    btn1 = types.KeyboardButton(text="Настройки ⚙️")
     Keyboard.add(btn2, btn3, btn5, btn6, btn8 ,btn1)
     time.sleep(1)
     bot.send_message(message.chat.id, "Открываю главное меню", reply_markup = Keyboard)
 
-#Пользовательское меню 
+
+# Пользовательское меню 
 def keyboard_user(message):
     Keyboard = types.ReplyKeyboardMarkup(row_width = 3, resize_keyboard=True)
-    btn2 = types.KeyboardButton(text = "Список песен 📔")
-    btn3 = types.KeyboardButton(text = "Оставить отзыв 💬")
-    btn4 = types.KeyboardButton(text = "События 📅")
-    btn1 = types.KeyboardButton(text = "Настройки ⚙️")
+    btn2 = types.KeyboardButton(text="Список песен 📔")
+    btn3 = types.KeyboardButton(text="Оставить отзыв 💬")
+    btn4 = types.KeyboardButton(text="События 📅")
+    btn1 = types.KeyboardButton(text="Настройки ⚙️")
     Keyboard.add(btn2, btn3, btn4, btn1)
     bot.send_message(message.chat.id, "Открываю меню", reply_markup = Keyboard)
 
-#Да/Нет клавиатура
+
+# Да/Нет клавиатура
 def keyboard_yes_no(message):
     keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard=True)
-    btn1 = types.KeyboardButton(text = "Да")
-    btn2 = types.KeyboardButton(text = "Нет")
+    btn1 = types.KeyboardButton(text="Да")
+    btn2 = types.KeyboardButton(text="Нет")
     keyboard.add(btn1, btn2)
     return keyboard
 
-#Подменю настроек
+
+# Подменю настроек
 def keyboard_setting_submenu(message, text):
     rows = db_user_select_by_id(id_user = message.from_user.id)
     keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard = True)
-    btn1 = types.KeyboardButton(text = "Показать мои данные 👤")
-    btn5 = types.KeyboardButton(text = "Песенники 📔")
-    btn6 = types.KeyboardButton(text = "Помощь ❓")
-    btn4 = types.KeyboardButton(text = "Назад")
+    btn1 = types.KeyboardButton(text="Показать мои данные 👤")
+    btn5 = types.KeyboardButton(text="Песенники 📔")
+    btn6 = types.KeyboardButton(text="Помощь ❓")
+    btn4 = types.KeyboardButton(text="Назад")
     if rows[4] == 0 and rows != NoneType:
-        btn2 = types.KeyboardButton(text = "Подключить рассылку 🔔")
+        btn2 = types.KeyboardButton(text="Подключить рассылку 🔔")
     else:
-        btn2 = types.KeyboardButton(text = "Отключить рассылку 🔕")
+        btn2 = types.KeyboardButton(text="Отключить рассылку 🔕")
     if rows[6] == 1:
-        btn3 = types.KeyboardButton(text = "Администраторы 💼")
+        btn3 = types.KeyboardButton(text="Администраторы 💼")
         keyboard.add(btn1, btn2, btn3, btn5, btn6, btn4)
         bot.send_message(message.chat.id, text, reply_markup = keyboard)
     else:
         keyboard.add(btn1, btn2, btn5, btn6, btn4)
         bot.send_message(message.chat.id, text, reply_markup = keyboard)
 
-#Подменю "События"
+
+# Подменю "События"
 def keyboard_event_submenu(message):
-    rows = db_user_select_by_id(id_user = message.from_user.id)
+
+    rows = db_user_select_by_id(id_user = message.from_user.id)    
     keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard=True)
-    btn1 = types.KeyboardButton(text = "Показать ближайшие события")
-    btn3 = types.KeyboardButton(text = "Назад")
-    if rows[6] == 1 or rows[6] == 2 and rows != NoneType:
-        btn2 = types.KeyboardButton(text = "Создать событие")
+    btn1 = types.KeyboardButton(text="Показать ближайшие события")
+    btn3 = types.KeyboardButton(text="Назад")
+    if rows[6] in (1,2):
+        btn2 = types.KeyboardButton(text="Создать событие")
         keyboard.add(btn1, btn2, btn3)
         bot.send_message(message.chat.id, "Открываю", reply_markup = keyboard)
     else:
         keyboard.add(btn1, btn3)
         bot.send_message(message.chat.id, "Открываю", reply_markup = keyboard)
 
-#Подменю "Отзывы"
+
+# Подменю "Отзывы"
 def keyboard_review_submenu(message):
 
     rows = db_user_select_by_id(id_user = message.from_user.id)
@@ -107,31 +122,33 @@ def keyboard_review_submenu(message):
     if rows[6] == 1 or rows[6] == 2:
         rows = db_user_select_by_id(id_user = message.from_user.id)
         keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard = True)
-        btn1 = types.KeyboardButton(text = "Показать отзывы")
-        btn2 = types.KeyboardButton(text = "Оставить отзыв")
-        btn3 = types.KeyboardButton(text = "Назад")
+        btn1 = types.KeyboardButton(text="Показать отзывы")
+        btn2 = types.KeyboardButton(text="Оставить отзыв 💬")
+        btn3 = types.KeyboardButton(text="Назад")
         keyboard.add(btn1, btn2, btn3)
         bot.send_message(message.chat.id, "Открываю", reply_markup = keyboard)
     else:
         error(message = message)
 
-#Подменю "Администраторы"
+
+# Подменю "Администраторы"
 def keyboard_admin_edit_submenu(message):
 
     rows = db_user_select_by_id(id_user = message.from_user.id)
 
     if rows[6] == 1:
         keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard = True)
-        btn1 = types.KeyboardButton(text = "Назад")
-        btn2 = types.KeyboardButton(text = "Назначить администратором")
-        btn3 = types.KeyboardButton(text = "Убрать администратора")
-        btn4 = types.KeyboardButton(text = "Показать всех администраторов")
+        btn1 = types.KeyboardButton(text="Назад")
+        btn2 = types.KeyboardButton(text="Назначить администратором")
+        btn3 = types.KeyboardButton(text="Убрать администратора")
+        btn4 = types.KeyboardButton(text="Показать всех администраторов")
         keyboard.add(btn2, btn3, btn4, btn1)
         bot.send_message(message.chat.id, "Открываю", reply_markup = keyboard)
     else:
         error(message = message)
 
-#Кнопка с ссылкой на администратора 
+
+# Кнопка с ссылкой на администратора 
 def administrator_call(message):
 
     keyboard = types.InlineKeyboardMarkup()
@@ -139,147 +156,187 @@ def administrator_call(message):
     keyboard.add(btn1)
     bot.send_message(message.chat.id, "👇", reply_markup = keyboard)
 
-#ФУНКЦИИ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ
+# ФУНКЦИИ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ
 
-#Получение всех пользователей
+
+# Получение всех пользователей
 def db_all_users():
+    cursor = conn.cursor()
     cursor.execute("SELECT * FROM Users LEFT OUTER JOIN Role ON Users.Id_role = Role.Id_role")
     rows = cursor.fetchall()
     return rows
 
-#Все айди чаты согласные на рассылку
+
+# Все айди чаты согласные на рассылку
 def db_user_select():
+    cursor = conn.cursor()
     cursor.execute("SELECT id_user FROM Users WHERE Event_status = 1")
     rows = cursor.fetchall()
     return rows
 
-#Конкретный человек по айди
+
+# Конкретный человек по айди
 def db_user_select_by_id(id_user:int):
+    cursor = conn.cursor()
     try:
         cursor.execute("SELECT * FROM Users LEFT OUTER JOIN Role ON Users.Id_role = Role.Id_role WHERE id_user = ?", (id_user,))
         rows = cursor.fetchone()
         return rows
     except:
         pass
-#Внесение данных о новом пользователе
+
+
+# Внесение данных о новом пользователе
 def db_user_insert(id_user: int, first_name: str, last_name:str, nickname: str, event_status: int):
+    cursor = conn.cursor()
     cursor.execute('INSERT INTO Users (id_user, First_name, Last_name, Nickname, Event_status, Id_role) VALUES (?,?,?,?,?,3)', (id_user, first_name, last_name, nickname, event_status))
     conn.commit()
 
-#Проверка на регистрацию пользователя
+
+# Проверка на регистрацию пользователя
 def db_user_registration_select(id_user: int):
+    cursor = conn.cursor()
     cursor.execute('SELECT * FROM Users WHERE id_user = ?', (id_user,))
     rows = cursor.fetchall()
     row = len(rows)
     return row
 
-#Изменение статуса рассылки у пользователя
+
+# Изменение статуса рассылки у пользователя
 def db_user_newsletter_edit(status: int, id_user: int):
+    cursor = conn.cursor()
     cursor.execute("UPDATE Users SET Event_status = ? WHERE id_user = ?", (status, id_user))
     conn.commit()
 
-#Изменение администраторов
-def db_user_upgrade(id_user:int, status):
+
+# Изменение администраторов
+def db_user_update(id_user:int, status):
+    cursor = conn.cursor()
     cursor.execute("UPDATE Users SET Id_role = ? WHERE id_user = ?", (status, id_user))
     conn.commit()
 
+
+# Показ всех администраторов
 def db_all_admin_select():
+    cursor = conn.cursor()
     cursor.execute("SELECT * FROM Users LEFT OUTER JOIN Role ON Users.Id_role = Role.Id_role WHERE Users.Id_role = 2")
     rows = cursor.fetchall()
     return rows
     
 
+# ВСЕ ФУНКЦИИ РАБОТЫ С ОТЗЫВАМИ
 
 
-#ВСЕ ФУНКЦИИ РАБОТЫ С ОТЗЫВАМИ
+# Вставка отзывов
+def db_review_insert(id_user:int, text_review: str, looked_status: int, date:str, message):
+    try:
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO Reviews (id_user, text_review, lookeed_status, date) VALUES (?, ?, ?, ?)', (id_user, text_review, looked_status, date))
+        conn.commit()
+    except:
+        bot.send_message(message.chat.id, "Иди отсюда, черт")
 
-#Вставка отзывов
-def db_review_insert(id_user:int, text_review: str, looked_status: int, date:str):
-    cursor.execute('INSERT INTO Reviews (id_user, text_review, lookeed_status, date) VALUES (?, ?, ?, ?)', (id_user, text_review, looked_status, date))
-    conn.commit()
 
-#Поиск отзывов
+# Поиск отзывов
 def db_review_select():
+    cursor = conn.cursor()
     cursor.execute("SELECT * FROM Reviews LEFT OUTER JOIN Users ON Reviews.id_user = Users.id_user WHERE date > date('now', '-7 days')")
     rows = cursor.fetchall()
     return rows
 
-#Обновление отзывов
+
+# Обновление отзывов
 def db_review_update(id_review: int):
+    cursor = conn.cursor()
     cursor.execute('UPDATE Reviews SET lookeed_status = 1 WHERE id_review = ?',(id_review,))
     conn.commit()
 
 
+# ВСЕ ФУНКЦИИ РАБОТЫ С ЗАПРОСАМИ
 
-#ВСЕ ФУНКЦИИ РАБОТЫ С ЗАПРОСАМИ
 
-#Вывод количества запросов за всё время
+# Вывод количества запросов за всё время
 def db_requests_count():
+    cursor = conn.cursor()
     cursor.execute('SELECT requests, COUNT (*) AS Count FROM Requests GROUP BY requests')
     rows = cursor.fetchall()
     return rows
 
-#Внесение данных в таблицу с запросами
-def db_requests_insert(id_user: int, requests: str, date: str):
-	cursor.execute('INSERT INTO Requests (id_user, requests, date) VALUES (?, ?, ?)', (id_user, requests, date))
-	conn.commit()
 
-#Вывод запросов по дате
+# Внесение данных в таблицу с запросами
+def db_requests_insert(id_user: int, requests: str, date: str):
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO Requests (id_user, requests, date) VALUES (?, ?, ?)', (id_user, requests, date))
+    conn.commit()
+
+
+# Вывод запросов по дате
 def db_requests_select_date(selected_date:str):
+    cursor = conn.cursor()
     query = 'SELECT requests, COUNT (*) AS Count FROM Requests WHERE date LIKE ' + selected_date + ' GROUP BY requests'
     cursor.execute(query)
     rows = cursor.fetchall()
     return rows
 
-#Вывод запросов за выбранный период
+
+# Вывод запросов за выбранный период
 def db_request_select_date_between(start_date:str, final_date:str):
+    cursor = conn.cursor()
     query = "SELECT requests, COUNT (*) AS Count FROM Requests WHERE date BETWEEN " + start_date + " AND " + final_date + " GROUP BY requests"
     cursor.execute(query)
     rows = cursor.fetchall()
     return rows
 
 
+# ВСЕ ФУНКЦИИ РАБОТЫ С СОБЫТИЯМИ
 
-#ВСЕ ФУНКЦИИ РАБОТЫ С СОБЫТИЯМИ
 
-#Все типы событий
+# Все типы событий
 def db_types_events():
+    cursor = conn.cursor()
     cursor.execute("SELECT Name_event FROM Type_event")
     rows = cursor.fetchall()
     return rows
 
-#Вставка события
+
+# Вставка события
 def db_event_insert(dtype_event: int, ddate_event: str, dtext_event: str, ddate_event_techical: str):
+    cursor = conn.cursor()
     cursor.execute("INSERT INTO Events (Text_event, Date_event, Date_event_technical ,Event_type) VALUES (?, ?, ?, ?)", (dtext_event, ddate_event, ddate_event_techical ,dtype_event))
     conn.commit()
     
-#Получение событий
+
+# Получение событий
 def db_event_select_last(type_event: str):
+    cursor = conn.cursor()
     cursor.execute("SELECT * FROM Events LEFT OUTER JOIN Type_event ON Events.Event_type = Type_event.Id_event WHERE Event_type = ? AND Date_event_technical > date('now') ORDER BY Id_event DESC LIMIT 1", (type_event,))
     rows = cursor.fetchone()
     return rows
 
 
+# ВСЕ ФУНКЦИИ РАБОТЫ С ПЕСНЯМИ
 
-#ВСЕ ФУНКЦИИ РАБОТЫ С ПЕСНЯМИ
 
-#Поиск всех песен
+# Поиск всех песен
 def db_song_select_all():
-    cursors = conn.cursor()
+    cursor = conn.cursor()
     try:
-        cursors.execute('SELECT * FROM songs')
-        rows = cursors.fetchall()
+        cursor.execute('SELECT * FROM songs')
+        rows = cursor.fetchall()
         return rows
     except:
         pass
 
-#Поиск песни по заголовку
+
+# Поиск песни по заголовку
 def db_song_select(title_song):
+    cursor = conn.cursor()
     cursor.execute('SELECT * FROM songs WHERE Title_song = ?',(title_song,))
     rows = cursor.fetchone()
     return rows
 
-#Отбор песен
+
+# Отбор песен
 def song_searc(message, title_song):
 
     keyboard = types.InlineKeyboardMarkup()
@@ -296,7 +353,7 @@ def song_searc(message, title_song):
         time.sleep(1)
         bot.send_message(message.chat.id, 'К сожалению я не разобрал ваш запрос.\nПопробуйте ещё раз.')
 
-    if key == True:
+    if key:
         for i in db_song_select_all():
                 a = fuzz.WRatio(i[2], title_song)
                 if a>75:
@@ -306,9 +363,10 @@ def song_searc(message, title_song):
         bot.send_message(message.chat.id, "Вот что я нашёл:", reply_markup = keyboard)
 
 
-#ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+# ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 
-#Вывод ошибки
+
+# Вывод ошибки
 def error(message):
     try:
         time.sleep(0.5)
@@ -321,21 +379,26 @@ def error(message):
         administrator_call(message)
         bot.send_photo(message.chat.id, cotik)
 
-#Все песенники
+
+# Все песенники
 def db_all_song_book():
+    cursor = conn.cursor()
     cursor.execute("SELECT * FROM Song_book")
     rows = cursor.fetchall()
     return rows
 
-#Песенник по заголовку
+
+# Песенник по заголовку
 def db_song_book_by_title(message, song_book_title):
+    cursor = conn.cursor()
     cursor.execute("SELECT file_path FROM Song_book WHERE title_book = ?", (song_book_title,))
     rows = cursor.fetchone()
     file = open (rows[0], 'rb')
     bot.send_message(message.chat.id, "Загружаю...")
     bot.send_document(message.chat.id, file)
 
-#Получение фотографии для Маши
+
+# Получение фотографии для Маши
 def get_img_from_Masha(message):
 
     bot.send_message(message.chat.id, 'Формирую списки\n[////                ]')
@@ -352,14 +415,16 @@ def get_img_from_Masha(message):
     urlsite = 'https://www.theplace.ru'
     count = 0
 
-    #Заполнение списка ссылками из файла
+
+    # Заполнение списка ссылками из файла
     for line in used_links2:
         line_list.append(line)
 
     bot.edit_message_text ('Собираю фотографии\n[//////              ]', chat_id=message.chat.id, message_id=message.message_id + 1)
     time.sleep(1)
 
-    #Шаламе
+
+    # Шаламе
     for p in range(1,3):
 
         url = 'https://www.theplace.ru/photos/timothee_chalamet/?page='+str(p)
@@ -376,7 +441,8 @@ def get_img_from_Masha(message):
             count = count + 1
             bot.edit_message_text ('Собрано фотографий: ' + str(count) + '\n[/////////           ]', chat_id=message.chat.id, message_id=message.message_id + 1)
 
-    #Джонни
+
+    # Джонни
     for p in range(1,3):
 
         url = 'https://www.theplace.ru/photos/johnny_depp/?page='+str(p)
@@ -408,7 +474,8 @@ def get_img_from_Masha(message):
     else:
         bot.send_message(message.chat.id, 'Фотографии закончились. ')
 
-#Перевод аудио в текст
+
+# Перевод аудио в текст
 def audio_to_text(dest_name: str, message):
     try:
     # Функция для перевода аудио , в формате ".vaw" в текст

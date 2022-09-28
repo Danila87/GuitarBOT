@@ -4,44 +4,61 @@ from email.message import Message
 from glob import escape
 from itertools import count
 from unicodedata import name
-import telebot
-import time
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 from telebot import types
 from datetime import datetime
 from function import *
-import datetime
 from datetime import date
-import re
-import requests
 from bs4 import BeautifulSoup
+
 import random
 import os
 import speech_recognition as sr
 import subprocess
-import ffmpeg
 import yadisk
+import telebot
+import time
+import datetime
+import re
+import requests
 
-#Служебные данные для бота
-#TOKEN = os.environ["BOT_TOKEN"]
-token = '5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU'
-yandex_token = 'y0_AgAAAAAO_DuQAAhmIAAAAADOUpN38O9Jqe8fTx275pqgdwJIP-pbvR8'
-y = yadisk.YaDisk(token=yandex_token)
-bot = telebot.TeleBot(token)
+# Служебные данные для бота
+# TOKEN = os.environ["BOT_TOKEN"]
+TOKEN = '5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU'
+YANDEX_TOKEN = 'y0_AgAAAAAO_DuQAAhmIAAAAADOUpN38O9Jqe8fTx275pqgdwJIP-pbvR8'
+
+y = yadisk.YaDisk(token=YANDEX_TOKEN)
+telebot.apihelper.ENABLE_MIDDLEWARE = True
+bot = telebot.TeleBot(TOKEN, skip_pending=True)
+
 logfile_record = 'audio_record//' +  str(datetime.date.today()) + '_record.log'
 logfile_error = 'audio_record//' + str(datetime.date.today()) + '_error.log'
-#Текущие даты
+
+# Текущие даты
 now = datetime.datetime.now()
 year = str(now.year)
 month = str(now.month)
 day = str(now.day)
 
-#Словари
+mut_user_values = {} 
+list_banned_users = []
+
+cotik_prison = open("img\cotik_prison.jpg", "wb")
+
+# Словари
 Months = {'Январь': '01', 'Февраль': '02', 'Март': '03', 'Апрель': '04', 'Май': '05', 'Июнь': '06', 'Июль': '07', 'Август': '08', 'Сентябрь': '09', 'Октябрь': '10', 'Ноябрь': '11', 'Декабрь': '12'}
 Type_event = {'Орлятский круг': '1', 'Песенный зачёт' : '2', 'Спевка': '3', 'Квартирник': '4'}
 
-#Старт программы
+@bot.message_handler(func = lambda message: message.from_user.id in list_banned_users)
+def banned(message):
+    bot.send_message(message.chat.id, 'Ожидайте пока бан спадет')
+
+def banned_remove(id_user):
+    print (id_user)
+    list_banned_users.remove(id_user)
+
+# Старт программы
 @bot.message_handler(commands = ['start'])
 def start (message):
 
@@ -62,6 +79,7 @@ def start (message):
         bot.register_next_step_handler(sent, user_registration_newsletter, id_user, first_name, last_name, nickname)
 
 def user_registration_newsletter(message, id_user, first_name, last_name, nickname):
+
     if message.text == "Да":
         bot.send_message(message.chat.id, "Успешно!\nОтказаться от рассылки можно в меню в разделе 'Настройки'")
         db_user_insert(id_user = id_user, first_name = first_name, last_name = last_name, nickname = nickname, event_status = 1)
@@ -73,8 +91,65 @@ def user_registration_newsletter(message, id_user, first_name, last_name, nickna
         time.sleep(1)
         keyboard_user(message)
 
+# Обработка сообщений
+@bot.middleware_handler(update_types=['message'])
+def modify_message(bot_instance, message):
 
-#Админ меню
+    registration(message=message)
+
+    # МУТ система
+    now = datetime.datetime.now().timestamp()
+    cotik_prison = open('img//cotik_banned.jpg', 'rb')
+    
+    if message.from_user.id not in mut_user_values:
+        mut_user_values[message.from_user.id] = {'id_user' : message.from_user.id, 'date_first' : int(now), 'date_last' : int(now) ,'count': 0}
+
+
+    elif mut_user_values[message.from_user.id]['count'] > 15:
+
+        if message.from_user.id not in list_banned_users:
+
+            list_banned_users.append(message.from_user.id)
+
+            mut_user_values[message.from_user.id]['date_first'] = int(now)
+
+            bot.send_message(message.chat.id, 'Установлен бан на 3 минуты!' )
+            bot.send_photo(message.chat.id, cotik_prison)
+
+            if mut_user_values[message.from_user.id]['date_last'] - mut_user_values[message.from_user.id]['date_first'] > 180:
+
+                mut_user_values[message.from_user.id]['count'] = 0
+                mut_user_values[message.from_user.id]['date_first'] = int(now)
+
+                banned_remove(id_user=mut_user_values[message.from_user.id]['id_user'])
+                bot.send_message(message.chat.id, 'Бан закончился\nНе спамьте больше!')
+        else:
+            if mut_user_values[message.from_user.id]['date_last'] - mut_user_values[message.from_user.id]['date_first'] > 180:
+
+                mut_user_values[message.from_user.id]['count'] = 0
+                mut_user_values[message.from_user.id]['date_first'] = int(now)
+
+                banned_remove(id_user=mut_user_values[message.from_user.id]['id_user'])
+                bot.send_message(message.chat.id, 'Бан закончился\nНе спамьте больше!')
+            else:
+
+                mut_user_values[message.from_user.id]['date_last'] = mut_user_values[message.from_user.id]['date_last'] = int(now)
+                bot.send_message(message.chat.id, 'До конца бана осталось ' + str(180 - (mut_user_values[message.from_user.id]['date_last'] - mut_user_values[message.from_user.id]['date_first'])) + ' секунд')
+    else:
+
+        mut_user_values[message.from_user.id]['date_last'] = mut_user_values[message.from_user.id]['date_last'] = int(now)
+        mut_user_values[message.from_user.id]['count'] = mut_user_values[message.from_user.id]['count'] + 1
+
+        for i in mut_user_values:
+            if mut_user_values[i]['date_last'] - mut_user_values[i]['date_first'] >= 30:
+
+                mut_user_values[i]['count'] = 0
+                mut_user_values[i]['date_first'] = int(now)
+
+    print(mut_user_values)
+    print(list_banned_users)
+
+# Админ меню
 @bot.message_handler(func = lambda message: message.text == 'Админ меню')
 def admin_menu(message):
 
@@ -88,8 +163,7 @@ def admin_menu(message):
         bot.send_message(message.chat.id, "В доступе отказано.")
         error(message = message)
 
-
-#Подменю
+# Подменю
 @bot.message_handler(func = lambda message: message.text == "Вывести запросы 📈" or message.text == "Назад")
 def submenu(message):
 
@@ -110,15 +184,15 @@ def submenu(message):
             error(message = message)
 
     if message.text == "Назад":
-        if rows[6] == 1 or rows [6] == 2:
+        if rows[6] in (1,2):
             keyboard_admin(message)
         else:
             keyboard_user(message)
 
 
-#Все песенники
+# Все песенники
 @bot.message_handler(func = lambda message: message.text == 'Песенники 📔')
-def send_pesennik_io_spo(message):
+def send_pesennik(message):
 
     keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard = True)
     btn1 = types.KeyboardButton(text = "Назад")
@@ -130,7 +204,7 @@ def send_pesennik_io_spo(message):
     bot.send_message(message.chat.id, "Выберите песенник", reply_markup = keyboard)
 
 
-#Выдача файла песенника
+# Выдача файла песенника
 @bot.message_handler(func = lambda message: message.text in [x[1] for x in db_all_song_book()])
 def send_file_by_title(message):
 
@@ -138,42 +212,42 @@ def send_file_by_title(message):
     db_song_book_by_title (message = message, song_book_title=song_book_title)
 
 
-#Вывод основного меню
+# Вывод основного меню
 @bot.message_handler(func = lambda message: message.text == 'Меню' or message.text == "меню")
 def main_menu(message):
 
     keyboard_user(message)
 
 
-#Подменю "Администраторы"
+# Подменю "Администраторы"
 @bot.message_handler(func=lambda message: message.text == "Администраторы 💼")
 def admin_edit_submenu(message):
 
     keyboard_admin_edit_submenu(message)
 
 
-#Подменю "События"
+# Подменю "События"
 @bot.message_handler(func = lambda message: message.text == "События 📅")
 def event_submenu(message):
 
     keyboard_event_submenu(message)
 
 
-#Подменю "Отзывы"
+# Подменю "Отзывы"
 @bot.message_handler(func = lambda message: message.text == "Отзывы 💬")
 def review_submenu(message):
 
     keyboard_review_submenu(message)
 
 
-#Подменю "Настройки"
+# Подменю "Настройки"
 @bot.message_handler(func = lambda message: message.text == "Настройки ⚙️")
 def review_submenu(message):
 
     keyboard_setting_submenu(message, text = "Открываю")
 
 
-#Назначение администратора
+# Назначение администратора
 @bot.message_handler(func=lambda message: message.text == "Назначить администратором")
 def appoint_as_administrator_start(message):
 
@@ -190,7 +264,7 @@ def appoint_as_administrator_end(message):
         bot.send_message(message.chat.id, "Проверяю пользователя " + rows[3])
         time.sleep(1)
         if rows[6] == 3 or rows[6] == None:
-            db_user_upgrade(id_user = id_user, status = 2)
+            db_user_update(id_user = id_user, status = 2)
             bot.send_message(message.chat.id, "Назначаю пользователя " + rows[3] + " администратором.")
             time.sleep(1)
             bot.send_message(message.chat.id, "Права повышены!")
@@ -210,7 +284,7 @@ def appoint_as_administrator_end(message):
         appoint_as_administrator_start(message)
 
 
-#Понижение администратора
+# Понижение администратора
 @bot.message_handler(func=lambda message: message.text == "Убрать администратора")
 
 def downgrad_as_administrator_start(message):
@@ -232,7 +306,7 @@ def downgrad_as_administrator_end(message):
         bot.send_message(message.chat.id, "Проверяю пользователя " + rows[3])
         time.sleep(1)
         if rows[6] == 2:
-            db_user_upgrade(id_user = id_user, status = 3)
+            db_user_update(id_user = id_user, status = 3)
             bot.send_message(message.chat.id, "Понижаю пользователя  " + rows[3] + " .")
             time.sleep(1)
             bot.send_message(message.chat.id, "Права понижены!")
@@ -253,7 +327,7 @@ def downgrad_as_administrator_end(message):
         downgrad_as_administrator_start(message)
 
 
-#Показать всех администраторов
+# Показать всех администраторов
 @bot.message_handler(func=lambda message:message.text == "Показать всех администраторов")
 def show_all_administrators(message):
     
@@ -268,7 +342,7 @@ def show_all_administrators(message):
         bot.send_message(message.chat.id, "Администраторов нет.")
 
 
-#Подключение и отключение рассылки
+# Подключение и отключение рассылки
 @bot.message_handler(func=lambda message: message.text == "Подключить рассылку 🔔" or message.text == "Отключить рассылку 🔕")
 def user_newsletter_edit(message):
 
@@ -284,7 +358,7 @@ def user_newsletter_edit(message):
         bot.send_message(message.chat.id, "Рассылка отключена!")
 
 
-#Вывод данных пользователя
+# Вывод данных пользователя
 @bot.message_handler(func=lambda message: message.text == "Показать мои данные 👤")
 def user_profile_slow(message):
     try:
@@ -300,7 +374,7 @@ def user_profile_slow(message):
         bot.send_message(message.chat.id, 'Не нашёл ваши данные:(\nВозможно вы не зарегистрированы. Введите /start для регистрации')
 
 
-#Пересылка различных сообщений пользователям
+# Пересылка различных сообщений пользователям
 @bot.message_handler(func=lambda message: message.text == "Переслать сообщение ✉️")
 def forward_message_start(message):
 
@@ -332,7 +406,7 @@ def forward_message_end(message):
             bot.send_message(message.chat.id, "Возникла ошибка")
 
 
-#Оставить отзыв
+# Оставить отзыв
 @bot.message_handler(func=lambda message: message.text == 'Оставить отзыв 💬')
 def review(message):
 
@@ -343,7 +417,7 @@ def review_save(message):
     if message.content_type == 'text':
         id_user = message.from_user.id
         user_text = message.text
-        db_review_insert(id_user = id_user, text_review = user_text, looked_status = 0, date = date.today())
+        db_review_insert(id_user = id_user, text_review = user_text, looked_status = 0, date = date.today(), message=message)
         bot.send_message(message.chat.id, 'Спасибо за ваш отзыв!')
     else:
         sent = bot.send_message(message.chat.id, 'Я принимаю только текст!)')
@@ -352,13 +426,14 @@ def review_save(message):
         bot.send_message(message.chat.id, 'Напишите следующим сообщением свой отзыв.')
 
 
-#Показать отзывы
+# Показать отзывы
 @bot.message_handler(func = lambda message: message.text == 'Показать отзывы')
 def review_show(message):
 
     rows = db_user_select_by_id(message.from_user.id)
 
-    if rows[6] in (1,2):
+    
+    if rows[6] in (1,2) and len(rows) != 0:
         review_list = []
         count = 0
         for i in db_review_select():
@@ -369,13 +444,13 @@ def review_show(message):
                 db_review_update(id_review=i[0])
             elif i[3] == 1:
                 status = "Просмотрено"
-            review_list.append( str(count) + '. ' + status + '\n' 'Пользователь '+ i[6] + ' ' + i[7]  + ' оставил следующий отзыв:\n\n"_'+i[2]+'_"'+'\n*дата: ' + i[4] + '*\n\n')
+            review_list.append( str(count) + '. ' + status + '\n' 'Пользователь '+ str(i[6]) + ' ' + str(i[7])  + ' оставил следующий отзыв:\n\n"_'+str(i[2])+'_"'+'\n*дата: ' + str(i[4]) + '*\n\n')
         bot.send_message(message.chat.id, (''.join(review_list)), parse_mode="Markdown")
     else:
-        error(message = message)
+        bot.send_message(message.chat.id, 'Отзывов нет')
 
 
-#Поиск запросов по периодам
+# Поиск запросов по периодам
 @bot.message_handler(func = lambda message: message.text == "За всё время" or message.text == "За день" or message.text == "За месяц" or message.text == "За год")
 def requests_by_date(message):
 
@@ -440,7 +515,7 @@ def requests_by_date(message):
         error(message = message)
 
 
-#Поиск запросов по конкретному месяцу
+# Поиск запросов по конкретному месяцу
 @bot.message_handler(func=lambda message: message.text == 'Выбрать месяц')
 def requests_select_date(message):
 
@@ -483,7 +558,7 @@ def requests_select_date_show(message):
         sent = bot.send_message(message.chat.id, 'Введите месяц. Например "Май"')
         bot.register_next_step_handler(sent, requests_select_date_show)
 
-#Отчёт по запросам за выбранный период
+# Отчёт по запросам за выбранный период
 @bot.message_handler(func=lambda message : message.text == 'Отчёт за период')
 def request_select_date_between(message):
     rows = db_user_select_by_id(message.from_user.id)
@@ -545,7 +620,7 @@ def date_between_end(message, start_date):
         sent = bot.send_message(message.chat.id, "Введите начальную дату в формате '2022-01-01'") 
         bot.register_next_step_handler(sent, date_between_end, start_date)
 
-#Вставка события и его рассылка
+# Вставка события и его рассылка
 @bot.message_handler(func=lambda message: message.text == "Создать событие")
 def event_create_start(message):
 
@@ -707,7 +782,7 @@ def event_newsletter(message, type_event):
         bot.register_next_step_handler(sent, event_newsletter, type_event)
 
 
-#Вывод ближайших событий
+# Вывод ближайших событий
 @bot.message_handler(func = lambda message: message.text == "Показать ближайшие события")
 def event_show(message):
 
@@ -725,7 +800,7 @@ def event_show(message):
     if key == False:
         bot.send_message(message.chat.id, 'Новых событий пока нет')
 
-#Список песен
+# Список песен
 @bot.message_handler(func=lambda message: message.text == 'Список песен 📔')
 def list_of_songs(message):
 
@@ -741,7 +816,7 @@ def list_of_songs(message):
     except:
         pass
 
-#Вывод картинки для Маши
+# Вывод картинки для Маши
 @bot.message_handler(commands = ['Masha'])
 def Masha (message):
 
@@ -764,14 +839,14 @@ def Masha_hub(message):
         keyboard_user(message=message)
 
 
-#Помощь
+# Помощь
 @bot.message_handler(func = lambda message: message.text == 'Помощь ❓')
 def help (message):
     
     bot.send_message(message.chat.id, 'ПОМОЩЬ\n\n• Бот создан для облегчения поиска песен из песенника. Для того чтобы найти песню просто введите её название, можно с ошибками но незначительными:)\n\n• Если у вас неожиданно пропало меню или по какой-то причине не оно открылось отправьте боту "Меню" и он его перезапустит.\n\n• В случае если бот не работает должным образом и выдаёт ошибку то вы можете написать администратору (В случае ошибки бот пришлёт на него ссылку) либо оставить отзыв с описанием проблемы.\n\n• Если программой предусмотрено, что у вас недостаточно прав для выполнения определённых функций то бот пришлёт вам ошибку с котиком :)\n\n• Если у вас есть пожелания по поводу улучшения работы бота или вы просто хотите оставить благодарность, то для этого вы можете написать отзыв через соответствующую команду!)')
 
 
-#Поиск песни через текст и аудио
+# Поиск песни через текст и аудио
 @bot.message_handler(content_types=['voice', 'text'])
 def search_song(message):
 
@@ -789,7 +864,7 @@ def search_song(message):
             fname = os.path.basename(path) # Преобразуем путь в имя файла (например: file_2.oga)
             fname = 'audio_record//'+fname
             print(fname)
-            doc = requests.get('https://api.telegram.org/file/bot{0}/{1}'.format(token, file_info.file_path))# Получаем и сохраняем присланную голосвуху (Ага, админ может в любой момент отключить удаление айдио файлов и слушать все, что ты там говоришь. А представь, что такую бяку подселят в огромный чат и она будет просто логировать все сообщения [анонимность в телеграмме, ахахаха])
+            doc = requests.get('https://api.telegram.org/file/bot{0}/{1}'.format(TOKEN, file_info.file_path))# Получаем и сохраняем присланную голосвуху (Ага, админ может в любой момент отключить удаление айдио файлов и слушать все, что ты там говоришь. А представь, что такую бяку подселят в огромный чат и она будет просто логировать все сообщения [анонимность в телеграмме, ахахаха])
             
             with open(fname+'.oga', 'wb') as f:
                 f.write(doc.content) # вот именно тут и сохраняется сама аудио-мессага
@@ -828,7 +903,7 @@ def search_song(message):
             os.remove(fname+'.wav')
             os.remove(fname+'.oga')
 
-#Вывод текста песни через кнопку
+# Вывод текста песни через кнопку
 @bot.callback_query_handler(func=lambda call: call.data in [x[1] for x in db_song_select_all()])
 def call_data(call):
 
@@ -841,6 +916,5 @@ def call_data(call):
     except:
         pass
     db_requests_insert(id_user=call.message.from_user.id, requests=rows[1], date = date.today())
-
 
 bot.polling(non_stop = True)
