@@ -17,17 +17,22 @@ import requests
 import random
 import os
 import speech_recognition as sr
-import ffmpeg
 import sqlite3
 import telebot
 import time
 import datetime
+import re
+import yadisk
+
 
 #TOKEN = os.environ["BOT_TOKEN"]
 TOKEN = '5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU'
+YANDEX_TOKEN = 'y0_AgAAAAAO_DuQAAhmIAAAAADOUpN38O9Jqe8fTx275pqgdwJIP-pbvR8'
+y = yadisk.YaDisk(token=YANDEX_TOKEN)
 bot = telebot.TeleBot(TOKEN, skip_pending=True)
 conn = sqlite3.connect('database//database.db', check_same_thread=False)
 cotik = open('img//cotik.jpg', 'rb')
+logfile_mat = 'log_files//' + str(datetime.date.today()) + '_mat.log'
 
 
 def registration(message):
@@ -488,3 +493,20 @@ def audio_to_text(dest_name: str, message):
         return result
     except:
         bot.send_message(message.chat.id, 'Возникла ошибка.\nПопробуйте ещё раз.')
+
+def mat_check(message, type_event):
+    row = db_user_select_by_id(id_user=message.from_user.id)
+    words = message.text.split(' ')
+    for i in words:
+        result = re.match(r'\b((у|[нз]а|(хитро|не)?вз?[ыьъ]|с[ьъ]|(и|ра)[зс]ъ?|(о[тб]|под)[ьъ]?|(.\B)+?[оаеи])?-?([её]б(?!о[рй])|и[пб][ае][тц]).*?|(н[иеа]|([дп]|верт)о|ра[зс]|з?а|с(ме)?|о(т|дно)?|апч)?-?ху([яйиеёю]|ли(?!ган)).*?|(в[зы]|(три|два|четыре)жды|(н|сук)а)?-?бл(я(?!(х|ш[кн]|мб)[ауеыио]).*?|[еэ][дт]ь?)|(ра[сз]|[зн]а|[со]|вы?|п(ере|р[оие]|од)|и[зс]ъ?|[ао]т)?п[иеё]зд.*?|(за)?п[ие]д[аое]?р([оа]м|(ас)?(ну.*?|и(ли)?[нщктл]ь?)?|(о(ч[еи])?|ас)?к(ой)|юг)[ауеы]?|манд([ауеыи](л(и[сзщ])?[ауеиы])?|ой|[ао]вошь?(е?к[ауе])?|юк(ов|[ауи])?)|муд([яаио].*?|е?н([ьюия]|ей))|мля([тд]ь)?|лять|([нз]а|по)х|м[ао]л[ао]фь([яию]|[еёо]й))\b', message.text)
+        #result = re.match(r'(\s+|^)[пПnрРp]?[3ЗзВBвПnпрРpPАaAаОoO0о]?[сСcCиИuUОoO0оАaAаыЫуУyтТT]?[Ппn][иИuUeEеЕ][зЗ3][ДдDd]\w*[\?\,\.\;\-]*|(\s+|^)[рРpPпПn]?[рРpPоОoO0аАaAзЗ3]?[оОoO0иИuUаАaAcCсСзЗ3тТTуУy]?[XxХх][уУy][йЙеЕeEeяЯ9юЮ]\w*[\?\,\.\;\-]*|(\s+|^)[бпПnБ6][лЛ][яЯ9]([дтДТDT]\w*)?[\?\,\.\;\-]*|(\s+|^)(([зЗоОoO03]?[аАaAтТT]?[ъЪ]?)|(\w+[оОOo0еЕeE]))?[еЕeEиИuUёЁ][бБ6пП]([аАaAиИuUуУy]\w*)?[\?\,\.\;\-]*', i)
+        if result != None:
+            with open(logfile_mat, 'a', encoding='utf-8') as logm:
+                logm.write(str(datetime.datetime.today().strftime("%H:%M:%S")) + ': Пользователь ' + str(row[1]) + ' ' + str(row[2]) + ' ' + ' написал "' + i + '" при ' + type_event + '.\n')
+            try:
+                y.upload("log_files/"+str(datetime.date.today()) + '_mat.log', "GuitarBOT_log/Log_mat/"+str(datetime.date.today()) + '_mat.log')
+            except:
+                y.remove("GuitarBOT_log/Log_mat/"+str(datetime.date.today()) + '_mat.log', permanently=True)
+                y.upload("log_files/"+str(datetime.date.today()) + '_mat.log', "GuitarBOT_log/Log_mat/"+str(datetime.date.today()) + '_mat.log')
+
+            return True

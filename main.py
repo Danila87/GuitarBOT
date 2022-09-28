@@ -22,6 +22,10 @@ import time
 import datetime
 import re
 import requests
+import logging
+import schedule
+import threading
+
 
 # Служебные данные для бота
 # TOKEN = os.environ["BOT_TOKEN"]
@@ -32,8 +36,10 @@ y = yadisk.YaDisk(token=YANDEX_TOKEN)
 telebot.apihelper.ENABLE_MIDDLEWARE = True
 bot = telebot.TeleBot(TOKEN, skip_pending=True)
 
-logfile_record = 'audio_record//' +  str(datetime.date.today()) + '_record.log'
-logfile_error = 'audio_record//' + str(datetime.date.today()) + '_error.log'
+logfile_audio_record = 'audio_record//' +  str(datetime.date.today()) + '_record.log'
+logfile_audio_error = 'audio_record//' + str(datetime.date.today()) + '_error.log'
+logfile_mat = 'log_files//' + str(datetime.date.today()) + '_mat.log'
+
 
 # Текущие даты
 now = datetime.datetime.now()
@@ -46,17 +52,45 @@ list_banned_users = []
 
 cotik_prison = open("img\cotik_prison.jpg", "wb")
 
+
 # Словари
 Months = {'Январь': '01', 'Февраль': '02', 'Март': '03', 'Апрель': '04', 'Май': '05', 'Июнь': '06', 'Июль': '07', 'Август': '08', 'Сентябрь': '09', 'Октябрь': '10', 'Ноябрь': '11', 'Декабрь': '12'}
 Type_event = {'Орлятский круг': '1', 'Песенный зачёт' : '2', 'Спевка': '3', 'Квартирник': '4'}
 
+
+# Хендлер для забаненых 
 @bot.message_handler(func = lambda message: message.from_user.id in list_banned_users)
 def banned(message):
     bot.send_message(message.chat.id, 'Ожидайте пока бан спадет')
 
+
+# Удаление из бана
 def banned_remove(id_user):
     print (id_user)
     list_banned_users.remove(id_user)
+
+
+# Обнуление счетчика сообщений
+def mut_user_values_clear():
+    now = datetime.datetime.now().timestamp()
+    for i in mut_user_values:
+        if mut_user_values[i]['id_user'] not in list_banned_users:
+            mut_user_values[i]['count'] = 0
+            mut_user_values[i]['date_first'] = int(now)
+
+
+# Расписание раз в 45 секунд
+def schedule_user():
+    schedule.every(45).seconds.do(mut_user_values_clear)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+
+# Отдельный поток для расписания
+thread = threading.Thread(target=schedule_user)
+thread.start()
 
 # Старт программы
 @bot.message_handler(commands = ['start'])
@@ -91,63 +125,51 @@ def user_registration_newsletter(message, id_user, first_name, last_name, nickna
         time.sleep(1)
         keyboard_user(message)
 
+
 # Обработка сообщений
 @bot.middleware_handler(update_types=['message'])
 def modify_message(bot_instance, message):
 
     registration(message=message)
 
+    mat_check(message=message, type_event='написании запроса')
+    
+
     # МУТ система
     now = datetime.datetime.now().timestamp()
     cotik_prison = open('img//cotik_banned.jpg', 'rb')
     
-    if message.from_user.id not in mut_user_values:
+    if message.from_user.id not in mut_user_values: # Если пользователя нет в словаре значений
         mut_user_values[message.from_user.id] = {'id_user' : message.from_user.id, 'date_first' : int(now), 'date_last' : int(now) ,'count': 0}
 
 
-    elif mut_user_values[message.from_user.id]['count'] > 15:
-
-        if message.from_user.id not in list_banned_users:
-
+    elif mut_user_values[message.from_user.id]['count'] > 15: # Если запросов больше 15
+        
+        if message.from_user.id not in list_banned_users: # Если пользователя нет в бан листе
             list_banned_users.append(message.from_user.id)
-
             mut_user_values[message.from_user.id]['date_first'] = int(now)
-
             bot.send_message(message.chat.id, 'Установлен бан на 3 минуты!' )
             bot.send_photo(message.chat.id, cotik_prison)
-
-            if mut_user_values[message.from_user.id]['date_last'] - mut_user_values[message.from_user.id]['date_first'] > 180:
-
+        
+        else: # Если пользователь есть в бан листе
+            
+            if mut_user_values[message.from_user.id]['date_last'] - mut_user_values[message.from_user.id]['date_first'] > 180: # Если время прошло
                 mut_user_values[message.from_user.id]['count'] = 0
                 mut_user_values[message.from_user.id]['date_first'] = int(now)
-
                 banned_remove(id_user=mut_user_values[message.from_user.id]['id_user'])
                 bot.send_message(message.chat.id, 'Бан закончился\nНе спамьте больше!')
-        else:
-            if mut_user_values[message.from_user.id]['date_last'] - mut_user_values[message.from_user.id]['date_first'] > 180:
-
-                mut_user_values[message.from_user.id]['count'] = 0
-                mut_user_values[message.from_user.id]['date_first'] = int(now)
-
-                banned_remove(id_user=mut_user_values[message.from_user.id]['id_user'])
-                bot.send_message(message.chat.id, 'Бан закончился\nНе спамьте больше!')
-            else:
-
+           
+            else: # Если время ещё не прошло
                 mut_user_values[message.from_user.id]['date_last'] = mut_user_values[message.from_user.id]['date_last'] = int(now)
                 bot.send_message(message.chat.id, 'До конца бана осталось ' + str(180 - (mut_user_values[message.from_user.id]['date_last'] - mut_user_values[message.from_user.id]['date_first'])) + ' секунд')
-    else:
-
+    
+    else: # Если запросов меньше 15
         mut_user_values[message.from_user.id]['date_last'] = mut_user_values[message.from_user.id]['date_last'] = int(now)
         mut_user_values[message.from_user.id]['count'] = mut_user_values[message.from_user.id]['count'] + 1
 
-        for i in mut_user_values:
-            if mut_user_values[i]['date_last'] - mut_user_values[i]['date_first'] >= 30:
-
-                mut_user_values[i]['count'] = 0
-                mut_user_values[i]['date_first'] = int(now)
-
     print(mut_user_values)
     print(list_banned_users)
+
 
 # Админ меню
 @bot.message_handler(func = lambda message: message.text == 'Админ меню')
@@ -162,6 +184,7 @@ def admin_menu(message):
     else:
         bot.send_message(message.chat.id, "В доступе отказано.")
         error(message = message)
+
 
 # Подменю
 @bot.message_handler(func = lambda message: message.text == "Вывести запросы 📈" or message.text == "Назад")
@@ -415,10 +438,16 @@ def review(message):
 
 def review_save(message):
     if message.content_type == 'text':
-        id_user = message.from_user.id
-        user_text = message.text
-        db_review_insert(id_user = id_user, text_review = user_text, looked_status = 0, date = date.today(), message=message)
-        bot.send_message(message.chat.id, 'Спасибо за ваш отзыв!')
+        if mat_check(message=message, type_event='написании отзыва'):
+            sent = bot.send_message(message.chat.id, 'Мат запрещён!')
+            bot.register_next_step_handler(sent, review_save)
+            time.sleep (1)
+            bot.send_message(message.chat.id, 'Напишите следующим сообщением свой отзыв.')
+        else:
+            id_user = message.from_user.id
+            user_text = message.text
+            db_review_insert(id_user = id_user, text_review = user_text, looked_status = 0, date = date.today(), message=message)
+            bot.send_message(message.chat.id, 'Спасибо за ваш отзыв!')
     else:
         sent = bot.send_message(message.chat.id, 'Я принимаю только текст!)')
         bot.register_next_step_handler(sent, review_save)
@@ -558,6 +587,7 @@ def requests_select_date_show(message):
         sent = bot.send_message(message.chat.id, 'Введите месяц. Например "Май"')
         bot.register_next_step_handler(sent, requests_select_date_show)
 
+
 # Отчёт по запросам за выбранный период
 @bot.message_handler(func=lambda message : message.text == 'Отчёт за период')
 def request_select_date_between(message):
@@ -619,6 +649,7 @@ def date_between_end(message, start_date):
         time.sleep(1)
         sent = bot.send_message(message.chat.id, "Введите начальную дату в формате '2022-01-01'") 
         bot.register_next_step_handler(sent, date_between_end, start_date)
+
 
 # Вставка события и его рассылка
 @bot.message_handler(func=lambda message: message.text == "Создать событие")
@@ -713,6 +744,7 @@ def event_preview(message, type_event, date_event, date_event_technical):
     if message.content_type == 'text':
 
         result = re.match(r'(\s+|^)[пПnрРp]?[3ЗзВBвПnпрРpPАaAаОoO0о]?[сСcCиИuUОoO0оАaAаыЫуУyтТT]?[Ппn][иИuUeEеЕ][зЗ3][ДдDd]\w*[\?\,\.\;\-]*|(\s+|^)[рРpPпПn]?[рРpPоОoO0аАaAзЗ3]?[оОoO0иИuUаАaAcCсСзЗ3тТTуУy]?[XxХх][уУy][йЙеЕeEeяЯ9юЮ]\w*[\?\,\.\;\-]*|(\s+|^)[бпПnБ6][лЛ][яЯ9]([дтДТDT]\w*)?[\?\,\.\;\-]*|(\s+|^)(([зЗоОoO03]?[аАaAтТT]?[ъЪ]?)|(\w+[оОOo0еЕeE]))?[еЕeEиИuUёЁ][бБ6пП]([аАaAиИuUуУy]\w*)?[\?\,\.\;\-]*', text_event)
+        row = db_user_select_by_id(id_user=message.from_user.id)
 
         if result == None:
             bot.send_message(message.chat.id, "Предпросмотр события: ")
@@ -723,13 +755,16 @@ def event_preview(message, type_event, date_event, date_event_technical):
             bot.register_next_step_handler(sent, save_event, type_event, date_event, text_event, date_event_technical)
         else:
             sent = bot.send_message(message.chat.id, "В вашем тексте обнаружен мат!\nВведите текст заново.")
+            mat_check(message=message, type_event='создании события')
+
+                
             bot.register_next_step_handler(sent, event_preview, type_event, date_event, date_event_technical)
-            time.sleep(1.5)
+            time.sleep(0.5)
             bot.send_message(message.chat.id, "Введите текст события")
     else: 
         sent = bot.send_message(message.chat.id, 'Я принимаю только текст!)')
         bot.register_next_step_handler(sent, event_preview, type_event, date_event, date_event_technical)
-        time.sleep(1.5)
+        time.sleep(0.5)
         bot.send_message(message.chat.id, "Введите текст события")
 
 def save_event(message, type_event, date_event, text_event, date_event_technical):
@@ -800,6 +835,7 @@ def event_show(message):
     if key == False:
         bot.send_message(message.chat.id, 'Новых событий пока нет')
 
+
 # Список песен
 @bot.message_handler(func=lambda message: message.text == 'Список песен 📔')
 def list_of_songs(message):
@@ -815,6 +851,7 @@ def list_of_songs(message):
         bot.send_message(chat_id,(''.join(list_song)))
     except:
         pass
+
 
 # Вывод картинки для Маши
 @bot.message_handler(commands = ['Masha'])
@@ -874,14 +911,14 @@ def search_song(message):
             resultsrc = result.lower().replace(" ", "")
             song_searc(message=message, title_song=resultsrc)
             
-            with open(logfile_record, 'a', encoding='utf-8') as logrecord:
+            with open(logfile_audio_record, 'a', encoding='utf-8') as logrecord:
                 logrecord.write(str(datetime.datetime.today().strftime("%H:%M:%S")) + ': Пользователь ' + str(message.from_user.id) + '_' + str(message.from_user.first_name) + '_' + str(message.from_user.last_name) + '_' + str(message.from_user.username) + ' записал "' + result + '"\n')
             
             try:
-                y.upload("audio_record/"+str(datetime.date.today()) + '_record.log', "GuitarBOT_log/"+str(datetime.date.today()) + '_record.log')
+                y.upload("audio_record/"+str(datetime.date.today()) + '_record.log', "GuitarBOT_log/Log_record/"+str(datetime.date.today()) + '_record.log')
             except:
-                y.remove("GuitarBOT_log/"+str(datetime.date.today()) + '_record.log', permanently=True)
-                y.upload("audio_record/"+str(datetime.date.today()) + '_record.log', "GuitarBOT_log/"+str(datetime.date.today()) + '_record.log')
+                y.remove("GuitarBOT_log/Log_record/"+str(datetime.date.today()) + '_record.log', permanently=True)
+                y.upload("audio_record/"+str(datetime.date.today()) + '_record.log', "GuitarBOT_log/Log_record/"+str(datetime.date.today()) + '_record.log')
             
         
         except sr.UnknownValueError as e:
@@ -889,19 +926,20 @@ def search_song(message):
 
         except Exception as e:
 
-            with open(logfile_error, 'a', encoding='utf-8') as logerr:
+            with open(logfile_audio_error, 'a', encoding='utf-8') as logerr:
                 logerr.write(str(datetime.datetime.today().strftime("%H:%M:%S")) + ': Пользователь ' + str(message.from_user.id) + '_' + str(message.from_user.first_name) + '_' + str(message.from_user.last_name) + '_' + str(message.from_user.username) + ' ошибка "' + str(e) + '"\n')
 
             try:
-                y.upload("audio_record/"+str(datetime.date.today()) + '_error.log', "GuitarBOT_log/"+str(datetime.date.today()) + '_error.log')
+                y.upload("audio_record/"+str(datetime.date.today()) + '_error.log', "GuitarBOT_log/Log_record/"+str(datetime.date.today()) + '_error.log')
             except:
-                y.remove("GuitarBOT_log/"+str(datetime.date.today()) + '_error.log', permanently=True)
-                y.upload("audio_record/"+str(datetime.date.today()) + '_error.log', "GuitarBOT_log/"+str(datetime.date.today()) + '_error.log')
+                y.remove("GuitarBOT_log/Log_record/"+str(datetime.date.today()) + '_error.log', permanently=True)
+                y.upload("audio_record/"+str(datetime.date.today()) + '_error.log', "GuitarBOT_log/Log_record/"+str(datetime.date.today()) + '_error.log')
             error(message=message)
         
         finally:
             os.remove(fname+'.wav')
             os.remove(fname+'.oga')
+
 
 # Вывод текста песни через кнопку
 @bot.callback_query_handler(func=lambda call: call.data in [x[1] for x in db_song_select_all()])
