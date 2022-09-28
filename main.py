@@ -839,18 +839,21 @@ def event_show(message):
 # Список песен
 @bot.message_handler(func=lambda message: message.text == 'Список песен 📔')
 def list_of_songs(message):
+    rows = db_type_song_select()
+    keyboard = types.InlineKeyboardMarkup()
+    for i in rows: 
+        btn = types.InlineKeyboardButton(i[1], callback_data=i[1])
+        keyboard.add(btn)
+    bot.send_message(message.chat.id, text='Доступные категории', reply_markup = keyboard)
 
-    try:
-        chat_id = message.chat.id
-        list_song = []
-        for i in db_song_select_all():
-            list_song.append(i[1]+'\n')
-            list_song.sort()
-        bot.send_message(chat_id,'Вот доступный список песен:')
-        time.sleep(1.5)
-        bot.send_message(chat_id,(''.join(list_song)))
-    except:
-        pass
+@bot.callback_query_handler(func=lambda call: call.data in [x[1] for x in db_type_song_select()])
+def list_of_song_by_type1(call):
+    row = db_song_select_by_type(type_song=call.data)
+    keyboard = types.InlineKeyboardMarkup()
+    for i in row:
+        btn = types.InlineKeyboardButton(i[1], callback_data=i[1])
+        keyboard.add(btn)
+    bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup = keyboard)
 
 
 # Вывод картинки для Маши

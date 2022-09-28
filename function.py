@@ -35,16 +35,6 @@ cotik = open('img//cotik.jpg', 'rb')
 logfile_mat = 'log_files//' + str(datetime.date.today()) + '_mat.log'
 
 
-def registration(message):
-    rows = db_user_select_by_id(id_user = message.from_user.id)
-    if rows == None:
-        id_user = message.from_user.id
-        first_name = message.from_user.first_name
-        last_name = message.from_user.last_name
-        nickname = message.from_user.username
-        db_user_insert(id_user=id_user, first_name=first_name, last_name=last_name, nickname=nickname, event_status=0)
-
-
 # РАЗЛИЧНЫЕ МЕНЮ ПОЛЬЗОВАТЕЛЕЙ
 
 
@@ -160,6 +150,7 @@ def administrator_call(message):
     btn1 = types.InlineKeyboardButton("Администратор", url='https://t.me/Danila877')
     keyboard.add(btn1)
     bot.send_message(message.chat.id, "👇", reply_markup = keyboard)
+
 
 # ФУНКЦИИ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ
 
@@ -341,6 +332,22 @@ def db_song_select(title_song):
     return rows
 
 
+# Поиск песни по категории
+def db_song_select_by_type(type_song):
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM Songs LEFT OUTER JOIN Type_song ON Songs.Type_song = Type_song.id_type WHERE Type_song.Type_song = ?', (type_song,))
+    rows = cursor.fetchall()
+    return rows
+
+
+# Получение категорий песен
+def db_type_song_select():
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM Type_song ')
+    rows = cursor.fetchall()
+    return rows
+
+
 # Отбор песен
 def song_searc(message, title_song):
 
@@ -494,6 +501,8 @@ def audio_to_text(dest_name: str, message):
     except:
         bot.send_message(message.chat.id, 'Возникла ошибка.\nПопробуйте ещё раз.')
 
+
+# Проверка на мат
 def mat_check(message, type_event):
     row = db_user_select_by_id(id_user=message.from_user.id)
     words = message.text.split(' ')
@@ -510,3 +519,14 @@ def mat_check(message, type_event):
                 y.upload("log_files/"+str(datetime.date.today()) + '_mat.log', "GuitarBOT_log/Log_mat/"+str(datetime.date.today()) + '_mat.log')
 
             return True
+
+
+# Авторегистрация
+def registration(message):
+    rows = db_user_select_by_id(id_user = message.from_user.id)
+    if rows == None:
+        id_user = message.from_user.id
+        first_name = message.from_user.first_name
+        last_name = message.from_user.last_name
+        nickname = message.from_user.username
+        db_user_insert(id_user=id_user, first_name=first_name, last_name=last_name, nickname=nickname, event_status=0)
