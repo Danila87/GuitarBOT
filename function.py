@@ -254,7 +254,7 @@ def db_review_update(id_review: int):
 # Вывод количества запросов за всё время
 def db_requests_count():
     cursor = conn.cursor()
-    cursor.execute('SELECT requests, COUNT (*) AS Count FROM Requests GROUP BY requests')
+    cursor.execute('SELECT requests, COUNT (*) AS Count FROM Requests GROUP BY requests ORDER BY Count DESC')
     rows = cursor.fetchall()
     return rows
 
@@ -269,7 +269,7 @@ def db_requests_insert(id_user: int, requests: str, date: str):
 # Вывод запросов по дате
 def db_requests_select_date(selected_date:str):
     cursor = conn.cursor()
-    query = 'SELECT requests, COUNT (*) AS Count FROM Requests WHERE date LIKE ' + selected_date + ' GROUP BY requests'
+    query = 'SELECT requests, COUNT (*) AS Count FROM Requests WHERE date LIKE ' + selected_date + ' GROUP BY requests ORDER BY Count DESC'
     cursor.execute(query)
     rows = cursor.fetchall()
     return rows
@@ -278,7 +278,7 @@ def db_requests_select_date(selected_date:str):
 # Вывод запросов за выбранный период
 def db_request_select_date_between(start_date:str, final_date:str):
     cursor = conn.cursor()
-    query = "SELECT requests, COUNT (*) AS Count FROM Requests WHERE date BETWEEN " + start_date + " AND " + final_date + " GROUP BY requests"
+    query = "SELECT requests, COUNT (*) AS Count FROM Requests WHERE date BETWEEN " + start_date + " AND " + final_date + " GROUP BY requests ORDER BY Count DESC"
     cursor.execute(query)
     rows = cursor.fetchall()
     return rows

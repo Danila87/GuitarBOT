@@ -40,7 +40,6 @@ logfile_audio_record = 'audio_record//' +  str(datetime.date.today()) + '_record
 logfile_audio_error = 'audio_record//' + str(datetime.date.today()) + '_error.log'
 logfile_mat = 'log_files//' + str(datetime.date.today()) + '_mat.log'
 
-
 # Текущие даты
 now = datetime.datetime.now()
 year = str(now.year)
@@ -51,7 +50,6 @@ mut_user_values = {}
 list_banned_users = []
 
 cotik_prison = open("img\cotik_prison.jpg", "wb")
-
 
 # Словари
 Months = {'Январь': '01', 'Февраль': '02', 'Март': '03', 'Апрель': '04', 'Май': '05', 'Июнь': '06', 'Июль': '07', 'Август': '08', 'Сентябрь': '09', 'Октябрь': '10', 'Ноябрь': '11', 'Декабрь': '12'}
@@ -402,9 +400,11 @@ def user_profile_slow(message):
 def forward_message_start(message):
 
     rows = db_user_select_by_id(id_user =  message.from_user.id)
-
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = types.KeyboardButton(text='Отмена')
+    keyboard.add(btn1)
     if rows[6] == 2 or rows[6] == 1:
-        sent = bot.send_message(message.chat.id, "Следующее сообщение будет отправлено пользовалям у которых подключена рассылка.\nВведите 'Отмена' если вы нажали кнопку по ошибке.")
+        sent = bot.send_message(message.chat.id, "Следующее сообщение будет отправлено пользовалям у которых подключена рассылка.", reply_markup=keyboard)
         bot.register_next_step_handler(sent, forward_message_end)
     else:
         error(message = message)
@@ -414,7 +414,7 @@ def forward_message_end(message):
     rows = db_user_select_by_id(id_user =  message.from_user.id)
     users = db_user_select()
 
-    if message.text == "Отмена" or message.text == "отмена":
+    if message.text == "Отмена":
         if rows[6] == 1 or rows [6] == 2:
             keyboard_admin(message)
         else:
@@ -496,7 +496,6 @@ def requests_by_date(message):
             else:
                 for i in db_requests_count():
                     requests_list.append(i[0] + ' : ' + str(i[1]) + '\n')
-                    requests_list.sort()
                 bot.send_message(message.chat.id, (''.join(requests_list)))
 
         if message.text == "За день":
@@ -508,7 +507,6 @@ def requests_by_date(message):
                 for i in db_requests_select_date(selected_date = present_day):
                     try:
                         requests_list.append(i[0] + ' : ' + str(i[1]) + '\n')
-                        requests_list.sort()
                     except:
                         error(message = message)
                 bot.send_message(message.chat.id, (''.join(requests_list)))
@@ -522,7 +520,6 @@ def requests_by_date(message):
                 for i in db_requests_select_date(selected_date = present_month):
                     try:
                         requests_list.append(i[0] + ' : ' + str(i[1]) + '\n')
-                        requests_list.sort()
                     except:
                         error(message=message)
                 bot.send_message(message.chat.id, (''.join(requests_list)))
@@ -536,7 +533,6 @@ def requests_by_date(message):
                 for i in db_requests_select_date(selected_date = present_year):
                     try:
                         requests_list.append(i[0] + ' : ' + str(i[1]) + '\n')
-                        requests_list.sort()
                     except:
                         error(message = message)
                 bot.send_message(message.chat.id, (''.join(requests_list)))
@@ -571,8 +567,7 @@ def requests_select_date_show(message):
             else:
                 for i in db_requests_select_date(selected_date = present_month):
                     try:
-                        requests_list.append(i[0] + ' : ' + str(i[1]) + '\n')
-                        requests_list.sort()
+                        requests_list.append(f'{i[0]} : {str(i[1])}\n')
                     except:
                         error(message = message)
                 bot.send_message(message.chat.id, (''.join(requests_list)))
@@ -839,23 +834,42 @@ def event_show(message):
 # Список песен
 @bot.message_handler(func=lambda message: message.text == 'Список песен 📔')
 def list_of_songs(message):
+
     rows = db_type_song_select()
     keyboard = types.InlineKeyboardMarkup()
+    
     for i in rows: 
         btn = types.InlineKeyboardButton(i[1], callback_data=i[1])
         keyboard.add(btn)
     bot.send_message(message.chat.id, text='Доступные категории', reply_markup = keyboard)
 
-@bot.callback_query_handler(func=lambda call: call.data in [x[1] for x in db_type_song_select()])
+# Обработка типов песен и вывод списка песен
+@bot.callback_query_handler(func=lambda call: call.data == 'back_to_category' or call.data in [x[1] for x in db_type_song_select()] or call.data  == 'next_page' or call.data == 'back_page')
 def list_of_song_by_type1(call):
-    row = db_song_select_by_type(type_song=call.data)
-    keyboard = types.InlineKeyboardMarkup()
-    for i in row:
-        btn = types.InlineKeyboardButton(i[1], callback_data=i[1])
-        keyboard.add(btn)
-    bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup = keyboard)
 
+    page = 1
+    count_page = 10
 
+    if call.data in [x[1] for x in db_type_song_select()]:
+        btn3 = types.InlineKeyboardButton('Вернуться к категориям', callback_data='back_to_category')
+
+        row = db_song_select_by_type(type_song=call.data)
+        keyboard = types.InlineKeyboardMarkup()
+        
+        for i in row:
+            btn = types.InlineKeyboardButton(i[1], callback_data=i[1])
+            keyboard.add(btn)
+        keyboard.add(btn3)
+        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup = keyboard)
+    
+    if call.data == 'back_to_category':
+        rows = db_type_song_select()
+        keyboard = types.InlineKeyboardMarkup()
+        for i in rows: 
+            btn_type = types.InlineKeyboardButton(i[1], callback_data=i[1])
+            keyboard.add(btn_type)
+        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup = keyboard)
+       
 # Вывод картинки для Маши
 @bot.message_handler(commands = ['Masha'])
 def Masha (message):
