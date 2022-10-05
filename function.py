@@ -23,6 +23,7 @@ import time
 import datetime
 import re
 import yadisk
+import threading
 
 
 #TOKEN = os.environ["BOT_TOKEN"]
@@ -435,40 +436,46 @@ def get_img_from_Masha(message):
     bot.edit_message_text ('Собираю фотографии\n[//////              ]', chat_id=message.chat.id, message_id=message.message_id + 1)
     time.sleep(1)
 
+    def shalame():
+        # Шаламе
+        for p in range(1,3):
 
-    # Шаламе
-    for p in range(1,3):
+            url = 'https://www.theplace.ru/photos/timothee_chalamet/?page='+str(p)
+            r = requests.get(url)
+            soup = BeautifulSoup(r.text, 'lxml')
+            images = soup.findAll('div', class_='p-1')
 
-        url = 'https://www.theplace.ru/photos/timothee_chalamet/?page='+str(p)
-        r = requests.get(url)
-        soup = BeautifulSoup(r.text, 'lxml')
-        images = soup.findAll('div', class_='p-1')
+            for image in images:
+                link = image.find('a').get('href')
+                r2 = requests.get(urlsite + link)
+                soup2 = BeautifulSoup(r2.text, 'lxml')
+                link2 = soup2.find('img', class_ = 'pic big_pic').get('src')
+                image_shalame_list.append(urlsite + link2)
 
-        for image in images:
-            link = image.find('a').get('href')
-            r2 = requests.get(urlsite + link)
-            soup2 = BeautifulSoup(r2.text, 'lxml')
-            link2 = soup2.find('img', class_ = 'pic big_pic').get('src')
-            image_shalame_list.append(urlsite + link2)
-            count = count + 1
-            bot.edit_message_text ('Собрано фотографий: ' + str(count) + '\n[/////////           ]', chat_id=message.chat.id, message_id=message.message_id + 1)
+    def jonny():
+        # Джонни
+        for p in range(1,3):
+
+            url = 'https://www.theplace.ru/photos/johnny_depp/?page='+str(p)
+            r = requests.get(url)
+            soup = BeautifulSoup(r.text, 'lxml')
+            images = soup.findAll('div', class_='col-6 col-sm-6 col-md-6 col-lg-4 col-xl-3 pb-3')
+            for image in images:
+                link = image.find('a', class_='photos-pic-card__link').get('href')
+                r2 = requests.get(urlsite+link)
+                soup2 = BeautifulSoup(r2.text, 'lxml')
+                link2 = soup2.find('img', class_='pic big_pic').get('src')
+                image_depp_list.append(urlsite+link2)
 
 
-    # Джонни
-    for p in range(1,3):
+    t1 = threading.Thread(target = shalame)
+    t2 = threading.Thread(target = jonny)
+    
+    t1.start()
+    t2.start()
 
-        url = 'https://www.theplace.ru/photos/johnny_depp/?page='+str(p)
-        r = requests.get(url)
-        soup = BeautifulSoup(r.text, 'lxml')
-        images = soup.findAll('div', class_='col-6 col-sm-6 col-md-6 col-lg-4 col-xl-3 pb-3')
-        for image in images:
-            link = image.find('a', class_='photos-pic-card__link').get('href')
-            r2 = requests.get(urlsite+link)
-            soup2 = BeautifulSoup(r2.text, 'lxml')
-            link2 = soup2.find('img', class_='pic big_pic').get('src')
-            image_depp_list.append(urlsite+link2)
-            count = count + 1
-            bot.edit_message_text ('Собрано фотографий: ' + str(count) + '\n[/////////////       ]', chat_id=message.chat.id, message_id=message.message_id + 1)
+    t1.join()
+    t2.join()
 
     bot.edit_message_text ('Выбираю фотографию\n[////////////////    ]', chat_id=message.chat.id, message_id=message.message_id + 1)
     image_list = image_depp_list + image_shalame_list        
@@ -504,23 +511,23 @@ def audio_to_text(dest_name: str, message):
 
 # Проверка на мат
 def mat_check(message, type_event):
-    row = db_user_select_by_id(id_user=message.from_user.id)
-    words = message.text.split(' ')
-    for i in words:
-        result = re.match(r'\b((у|[нз]а|(хитро|не)?вз?[ыьъ]|с[ьъ]|(и|ра)[зс]ъ?|(о[тб]|под)[ьъ]?|(.\B)+?[оаеи])?-?([её]б(?!о[рй])|и[пб][ае][тц]).*?|(н[иеа]|([дп]|верт)о|ра[зс]|з?а|с(ме)?|о(т|дно)?|апч)?-?ху([яйиеёю]|ли(?!ган)).*?|(в[зы]|(три|два|четыре)жды|(н|сук)а)?-?бл(я(?!(х|ш[кн]|мб)[ауеыио]).*?|[еэ][дт]ь?)|(ра[сз]|[зн]а|[со]|вы?|п(ере|р[оие]|од)|и[зс]ъ?|[ао]т)?п[иеё]зд.*?|(за)?п[ие]д[аое]?р([оа]м|(ас)?(ну.*?|и(ли)?[нщктл]ь?)?|(о(ч[еи])?|ас)?к(ой)|юг)[ауеы]?|манд([ауеыи](л(и[сзщ])?[ауеиы])?|ой|[ао]вошь?(е?к[ауе])?|юк(ов|[ауи])?)|муд([яаио].*?|е?н([ьюия]|ей))|мля([тд]ь)?|лять|([нз]а|по)х|м[ао]л[ао]фь([яию]|[еёо]й))\b', message.text)
-        #result = re.match(r'(\s+|^)[пПnрРp]?[3ЗзВBвПnпрРpPАaAаОoO0о]?[сСcCиИuUОoO0оАaAаыЫуУyтТT]?[Ппn][иИuUeEеЕ][зЗ3][ДдDd]\w*[\?\,\.\;\-]*|(\s+|^)[рРpPпПn]?[рРpPоОoO0аАaAзЗ3]?[оОoO0иИuUаАaAcCсСзЗ3тТTуУy]?[XxХх][уУy][йЙеЕeEeяЯ9юЮ]\w*[\?\,\.\;\-]*|(\s+|^)[бпПnБ6][лЛ][яЯ9]([дтДТDT]\w*)?[\?\,\.\;\-]*|(\s+|^)(([зЗоОoO03]?[аАaAтТT]?[ъЪ]?)|(\w+[оОOo0еЕeE]))?[еЕeEиИuUёЁ][бБ6пП]([аАaAиИuUуУy]\w*)?[\?\,\.\;\-]*', i)
-        if result != None:
-            with open(logfile_mat, 'a', encoding='utf-8') as logm:
-                logm.write(str(datetime.datetime.today().strftime("%H:%M:%S")) + ': Пользователь ' + str(row[1]) + ' ' + str(row[2]) + ' ' + ' написал "' + i + '" при ' + type_event + '.\n')
-            try:
-                y.upload("log_files/"+str(datetime.date.today()) + '_mat.log', "GuitarBOT_log/Log_mat/"+str(datetime.date.today()) + '_mat.log')
-            except:
-                y.remove("GuitarBOT_log/Log_mat/"+str(datetime.date.today()) + '_mat.log', permanently=True)
-                y.upload("log_files/"+str(datetime.date.today()) + '_mat.log', "GuitarBOT_log/Log_mat/"+str(datetime.date.today()) + '_mat.log')
+    if message.content_type == 'text':
+        row = db_user_select_by_id(id_user=message.from_user.id)
+        words = message.text.split(' ')
+        for i in words:
+            result = re.match(r'\b((у|[нз]а|(хитро|не)?вз?[ыьъ]|с[ьъ]|(и|ра)[зс]ъ?|(о[тб]|под)[ьъ]?|(.\B)+?[оаеи])?-?([её]б(?!о[рй])|и[пб][ае][тц]).*?|(н[иеа]|([дп]|верт)о|ра[зс]|з?а|с(ме)?|о(т|дно)?|апч)?-?ху([яйиеёю]|ли(?!ган)).*?|(в[зы]|(три|два|четыре)жды|(н|сук)а)?-?бл(я(?!(х|ш[кн]|мб)[ауеыио]).*?|[еэ][дт]ь?)|(ра[сз]|[зн]а|[со]|вы?|п(ере|р[оие]|од)|и[зс]ъ?|[ао]т)?п[иеё]зд.*?|(за)?п[ие]д[аое]?р([оа]м|(ас)?(ну.*?|и(ли)?[нщктл]ь?)?|(о(ч[еи])?|ас)?к(ой)|юг)[ауеы]?|манд([ауеыи](л(и[сзщ])?[ауеиы])?|ой|[ао]вошь?(е?к[ауе])?|юк(ов|[ауи])?)|муд([яаио].*?|е?н([ьюия]|ей))|мля([тд]ь)?|лять|([нз]а|по)х|м[ао]л[ао]фь([яию]|[еёо]й))\b', message.text)
+            #result = re.match(r'(\s+|^)[пПnрРp]?[3ЗзВBвПnпрРpPАaAаОoO0о]?[сСcCиИuUОoO0оАaAаыЫуУyтТT]?[Ппn][иИuUeEеЕ][зЗ3][ДдDd]\w*[\?\,\.\;\-]*|(\s+|^)[рРpPпПn]?[рРpPоОoO0аАaAзЗ3]?[оОoO0иИuUаАaAcCсСзЗ3тТTуУy]?[XxХх][уУy][йЙеЕeEeяЯ9юЮ]\w*[\?\,\.\;\-]*|(\s+|^)[бпПnБ6][лЛ][яЯ9]([дтДТDT]\w*)?[\?\,\.\;\-]*|(\s+|^)(([зЗоОoO03]?[аАaAтТT]?[ъЪ]?)|(\w+[оОOo0еЕeE]))?[еЕeEиИuUёЁ][бБ6пП]([аАaAиИuUуУy]\w*)?[\?\,\.\;\-]*', i)
+            if result != None:
+                with open(logfile_mat, 'a', encoding='utf-8') as logm:
+                    logm.write(str(datetime.datetime.today().strftime("%H:%M:%S")) + ': Пользователь ' + str(row[1]) + ' ' + str(row[2]) + ' ' + ' написал "' + i + '" при ' + type_event + '.\n')
+                try:
+                    y.upload("log_files/"+str(datetime.date.today()) + '_mat.log', "GuitarBOT_log/Log_mat/"+str(datetime.date.today()) + '_mat.log')
+                except:
+                    y.remove("GuitarBOT_log/Log_mat/"+str(datetime.date.today()) + '_mat.log', permanently=True)
+                    y.upload("log_files/"+str(datetime.date.today()) + '_mat.log', "GuitarBOT_log/Log_mat/"+str(datetime.date.today()) + '_mat.log')
 
-            return True
-
-
+                return True
+                
 # Авторегистрация
 def registration(message):
     rows = db_user_select_by_id(id_user = message.from_user.id)
