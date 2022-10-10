@@ -47,7 +47,7 @@ month = str(now.month)
 day = str(now.day)
 
 mut_user_values = {} 
-list_banned_users = []
+list_banned_users = ['123','321']
 
 cotik_prison = open("img\cotik_prison.jpg", "wb")
 
@@ -55,6 +55,12 @@ cotik_prison = open("img\cotik_prison.jpg", "wb")
 Months = {'Январь': '01', 'Февраль': '02', 'Март': '03', 'Апрель': '04', 'Май': '05', 'Июнь': '06', 'Июль': '07', 'Август': '08', 'Сентябрь': '09', 'Октябрь': '10', 'Ноябрь': '11', 'Декабрь': '12'}
 Type_event = {'Орлятский круг': '1', 'Песенный зачёт' : '2', 'Спевка': '3', 'Квартирник': '4'}
 
+
+class UserBanRemove():
+    def __init__(self, id_user):
+        self.id_user = id_user
+
+user_ban_remove = UserBanRemove('0')
 
 # Хендлер для забаненых 
 @bot.message_handler(func = lambda message: message.from_user.id in list_banned_users)
@@ -129,7 +135,6 @@ def user_registration_newsletter(message, id_user, first_name, last_name, nickna
 def modify_message(bot_instance, message):
 
     registration(message=message)
-
     mat_check(message=message, type_event='написании запроса')
     
 
@@ -164,9 +169,6 @@ def modify_message(bot_instance, message):
     else: # Если запросов меньше 15
         mut_user_values[message.from_user.id]['date_last'] = mut_user_values[message.from_user.id]['date_last'] = int(now)
         mut_user_values[message.from_user.id]['count'] = mut_user_values[message.from_user.id]['count'] + 1
-
-    print(mut_user_values)
-    print(list_banned_users)
 
 
 # Админ меню
@@ -749,13 +751,12 @@ def event_preview(message, type_event, date_event, date_event_technical):
             sent = bot.send_message(message.chat.id, "Сохранить событие?", reply_markup=keyboard_yes_no(message))
             bot.register_next_step_handler(sent, save_event, type_event, date_event, text_event, date_event_technical)
         else:
-            sent = bot.send_message(message.chat.id, "В вашем тексте обнаружен мат!\nВведите текст заново.")
+            bot.send_message(message.chat.id, "В вашем тексте обнаружен мат!\nДобро пожаловать в бан!")
+            bot.send_message(message.chat.id, 'Напишите администратору для разблокировки')
+            administrator_call(message)
             mat_check(message=message, type_event='создании события')
+            list_banned_users.append(message.from_user.id)
 
-                
-            bot.register_next_step_handler(sent, event_preview, type_event, date_event, date_event_technical)
-            time.sleep(0.5)
-            bot.send_message(message.chat.id, "Введите текст события")
     else: 
         sent = bot.send_message(message.chat.id, 'Я принимаю только текст!)')
         bot.register_next_step_handler(sent, event_preview, type_event, date_event, date_event_technical)
@@ -831,6 +832,56 @@ def event_show(message):
         bot.send_message(message.chat.id, 'Новых событий пока нет')
 
 
+# Бан лист
+@bot.message_handler(func = lambda message: message.text == "Бан лист")
+def ban_list_show(message):
+
+    rows = db_user_select_by_id(message.from_user.id)
+    if rows[6] == 1:
+
+        if len(list_banned_users) is not 0:
+            keyboard = types.InlineKeyboardMarkup()
+            for i in list_banned_users:
+                btn0 = types.InlineKeyboardButton(i, callback_data=i)
+                keyboard.add(btn0)
+            bot.send_message(message.chat.id, 'Бан лист:', reply_markup=keyboard)
+        else:
+            bot.send_message(message.chat.id, 'Бан лист пуст')
+
+
+#Удаление пользователя из бан листа
+@bot.callback_query_handler(func=lambda call: call.data in list_banned_users or call.data == 'Yes' or call.data == 'No')
+def ban_list_delete_start(call):
+
+    if call.data in list_banned_users:
+        user_ban_remove.id_user = call.data
+        keyboard = types.InlineKeyboardMarkup()
+        btn1 = types.InlineKeyboardButton('Нет', callback_data='No')
+        btn2 = types.InlineKeyboardButton('Да', callback_data='Yes')
+        keyboard.row(btn1, btn2)
+        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup = keyboard)
+    try:
+        if call.data == 'Yes':
+            list_banned_users.remove(user_ban_remove.id_user)
+            if len(list_banned_users) is not 0:
+                keyboard = types.InlineKeyboardMarkup()
+                for i in list_banned_users:
+                    btn0 = types.InlineKeyboardButton(i, callback_data=i)
+                    keyboard.add(btn0)
+                bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup = keyboard)
+            else:
+                bot.send_message(call.message.chat.id, 'Бан лист пустой')
+        elif call.data == 'No':
+            if len(list_banned_users) is not 0:
+                keyboard = types.InlineKeyboardMarkup()
+                for i in list_banned_users:
+                    btn0 = types.InlineKeyboardButton(i, callback_data=i)
+                    keyboard.add(btn0)
+                bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup = keyboard)
+            else:
+                bot.send_message(call.message.chat.id, 'Бан лист пустой')
+    except:
+        pass
 # Список песен
 @bot.message_handler(func=lambda message: message.text == 'Список песен 📔')
 def list_of_songs(message):
@@ -842,6 +893,7 @@ def list_of_songs(message):
         btn = types.InlineKeyboardButton(i[1], callback_data=i[1])
         keyboard.add(btn)
     bot.send_message(message.chat.id, text='Доступные категории', reply_markup = keyboard)
+
 
 # Обработка типов песен и вывод списка песен
 @bot.callback_query_handler(func=lambda call: call.data == 'back_to_category' or call.data in [x[1] for x in db_type_song_select()] or call.data  == 'next_page' or call.data == 'back_page')
@@ -869,7 +921,8 @@ def list_of_song_by_type1(call):
             btn_type = types.InlineKeyboardButton(i[1], callback_data=i[1])
             keyboard.add(btn_type)
         bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup = keyboard)
-       
+
+
 # Вывод картинки для Маши
 @bot.message_handler(commands = ['Masha'])
 def Masha (message):

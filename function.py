@@ -86,8 +86,9 @@ def keyboard_setting_submenu(message, text):
     else:
         btn2 = types.KeyboardButton(text="Отключить рассылку 🔕")
     if rows[6] == 1:
+        btn7 = types.KeyboardButton(text="Бан лист")
         btn3 = types.KeyboardButton(text="Администраторы 💼")
-        keyboard.add(btn1, btn2, btn3, btn5, btn6, btn4)
+        keyboard.add(btn1, btn2, btn3, btn5, btn6, btn7, btn4)
         bot.send_message(message.chat.id, text, reply_markup = keyboard)
     else:
         keyboard.add(btn1, btn2, btn5, btn6, btn4)
@@ -436,8 +437,10 @@ def get_img_from_Masha(message):
     bot.edit_message_text ('Собираю фотографии\n[//////              ]', chat_id=message.chat.id, message_id=message.message_id + 1)
     time.sleep(1)
 
-    def shalame():
-        # Шаламе
+
+    # Шаламе
+    def shalame_get_link():
+        
         for p in range(1,3):
 
             url = 'https://www.theplace.ru/photos/timothee_chalamet/?page='+str(p)
@@ -452,8 +455,9 @@ def get_img_from_Masha(message):
                 link2 = soup2.find('img', class_ = 'pic big_pic').get('src')
                 image_shalame_list.append(urlsite + link2)
 
-    def jonny():
-        # Джонни
+
+    # Джонни
+    def jonny_get_link():
         for p in range(1,3):
 
             url = 'https://www.theplace.ru/photos/johnny_depp/?page='+str(p)
@@ -467,13 +471,15 @@ def get_img_from_Masha(message):
                 link2 = soup2.find('img', class_='pic big_pic').get('src')
                 image_depp_list.append(urlsite+link2)
 
-
-    t1 = threading.Thread(target = shalame)
-    t2 = threading.Thread(target = jonny)
     
+    t1 = threading.Thread(target = shalame_get_link)
+    t2 = threading.Thread(target = jonny_get_link)
+
+    #Запуск потоков
     t1.start()
     t2.start()
 
+    #Ждём пока выполнятся потоки
     t1.join()
     t2.join()
 
