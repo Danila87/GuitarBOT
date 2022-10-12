@@ -186,9 +186,12 @@ def db_user_select_by_id(id_user:int):
 
 # Внесение данных о новом пользователе
 def db_user_insert(id_user: int, first_name: str, last_name:str, nickname: str, event_status: int):
-    cursor = conn.cursor()
-    cursor.execute('INSERT INTO Users (id_user, First_name, Last_name, Nickname, Event_status, Id_role) VALUES (?,?,?,?,?,3)', (id_user, first_name, last_name, nickname, event_status))
-    conn.commit()
+    try:
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO Users (id_user, First_name, Last_name, Nickname, Event_status, Id_role) VALUES (?,?,?,?,?,3)', (id_user, first_name, last_name, nickname, event_status))
+        conn.commit()
+    except:
+        pass
 
 
 # Проверка на регистрацию пользователя
@@ -263,10 +266,12 @@ def db_requests_count():
 
 # Внесение данных в таблицу с запросами
 def db_requests_insert(id_user: int, requests: str, date: str):
-    cursor = conn.cursor()
-    cursor.execute('INSERT INTO Requests (id_user, requests, date) VALUES (?, ?, ?)', (id_user, requests, date))
-    conn.commit()
-
+    try:
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO Requests (id_user, requests, date) VALUES (?, ?, ?)', (id_user, requests, date))
+        conn.commit()
+    except:
+        pass
 
 # Вывод запросов по дате
 def db_requests_select_date(selected_date:str):
@@ -299,10 +304,12 @@ def db_types_events():
 
 # Вставка события
 def db_event_insert(dtype_event: int, ddate_event: str, dtext_event: str, ddate_event_techical: str):
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO Events (Text_event, Date_event, Date_event_technical ,Event_type) VALUES (?, ?, ?, ?)", (dtext_event, ddate_event, ddate_event_techical ,dtype_event))
-    conn.commit()
-    
+    try:
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO Events (Text_event, Date_event, Date_event_technical ,Event_type) VALUES (?, ?, ?, ?)", (dtext_event, ddate_event, ddate_event_techical ,dtype_event))
+        conn.commit()
+    except:
+        pass
 
 # Получение событий
 def db_event_select_last(type_event: str):

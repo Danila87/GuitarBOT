@@ -47,7 +47,7 @@ month = str(now.month)
 day = str(now.day)
 
 mut_user_values = {} 
-list_banned_users = ['123','321']
+list_banned_users = []
 
 cotik_prison = open("img\cotik_prison.jpg", "wb")
 
@@ -671,7 +671,6 @@ def event_create_start(message):
 def date_event(message):
 
     rows =  [x[0] for x in db_types_events()]
-    print(rows) 
 
     if message.text == "Назад":
         keyboard_admin(message)
@@ -743,19 +742,18 @@ def event_preview(message, type_event, date_event, date_event_technical):
         result = re.match(r'(\s+|^)[пПnрРp]?[3ЗзВBвПnпрРpPАaAаОoO0о]?[сСcCиИuUОoO0оАaAаыЫуУyтТT]?[Ппn][иИuUeEеЕ][зЗ3][ДдDd]\w*[\?\,\.\;\-]*|(\s+|^)[рРpPпПn]?[рРpPоОoO0аАaAзЗ3]?[оОoO0иИuUаАaAcCсСзЗ3тТTуУy]?[XxХх][уУy][йЙеЕeEeяЯ9юЮ]\w*[\?\,\.\;\-]*|(\s+|^)[бпПnБ6][лЛ][яЯ9]([дтДТDT]\w*)?[\?\,\.\;\-]*|(\s+|^)(([зЗоОoO03]?[аАaAтТT]?[ъЪ]?)|(\w+[оОOo0еЕeE]))?[еЕeEиИuUёЁ][бБ6пП]([аАaAиИuUуУy]\w*)?[\?\,\.\;\-]*', text_event)
         row = db_user_select_by_id(id_user=message.from_user.id)
 
-        if result == None:
+        if mat_check(message=message, type_event='Создании события'):
+            bot.send_message(message.chat.id, "В вашем тексте обнаружен мат!\nДобро пожаловать в бан!")
+            bot.send_message(message.chat.id, 'Напишите администратору для разблокировки')
+            administrator_call(message)
+            list_banned_users.append(str(message.from_user.id))
+        else:
             bot.send_message(message.chat.id, "Предпросмотр события: ")
             time.sleep(1)
             bot.send_message(message.chat.id, "Тип события: " + type_event + '\nДата события: ' + date_event + '\nТекст события:\n' + text_event + '\nТехническая дата: ' + date_event_technical)
             time.sleep(1)
             sent = bot.send_message(message.chat.id, "Сохранить событие?", reply_markup=keyboard_yes_no(message))
             bot.register_next_step_handler(sent, save_event, type_event, date_event, text_event, date_event_technical)
-        else:
-            bot.send_message(message.chat.id, "В вашем тексте обнаружен мат!\nДобро пожаловать в бан!")
-            bot.send_message(message.chat.id, 'Напишите администратору для разблокировки')
-            administrator_call(message)
-            mat_check(message=message, type_event='создании события')
-            list_banned_users.append(message.from_user.id)
 
     else: 
         sent = bot.send_message(message.chat.id, 'Я принимаю только текст!)')
@@ -858,6 +856,8 @@ def ban_list_delete_start(call):
         keyboard = types.InlineKeyboardMarkup()
         btn1 = types.InlineKeyboardButton('Нет', callback_data='No')
         btn2 = types.InlineKeyboardButton('Да', callback_data='Yes')
+        btn3 = types.InlineKeyboardButton('Удалить из бана?')
+        keyboard.add(btn3)
         keyboard.row(btn1, btn2)
         bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup = keyboard)
     try:
@@ -882,6 +882,8 @@ def ban_list_delete_start(call):
                 bot.send_message(call.message.chat.id, 'Бан лист пустой')
     except:
         pass
+
+
 # Список песен
 @bot.message_handler(func=lambda message: message.text == 'Список песен 📔')
 def list_of_songs(message):
@@ -898,9 +900,6 @@ def list_of_songs(message):
 # Обработка типов песен и вывод списка песен
 @bot.callback_query_handler(func=lambda call: call.data == 'back_to_category' or call.data in [x[1] for x in db_type_song_select()] or call.data  == 'next_page' or call.data == 'back_page')
 def list_of_song_by_type1(call):
-
-    page = 1
-    count_page = 10
 
     if call.data in [x[1] for x in db_type_song_select()]:
         btn3 = types.InlineKeyboardButton('Вернуться к категориям', callback_data='back_to_category')
