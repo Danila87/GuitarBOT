@@ -65,7 +65,7 @@ user_ban_remove = UserBanRemove('0')
 # Хендлер для забаненых 
 @bot.message_handler(func = lambda message: message.from_user.id in list_banned_users)
 def banned(message):
-    bot.send_message(message.chat.id, 'Ожидайте пока бан спадет')
+    bot.send_message(message.chat.id, f'Ожидайте пока бан спадет')
 
 
 # Удаление из бана
@@ -108,23 +108,23 @@ def start (message):
     row = db_user_registration_select(id_user = id_user)
 
     if row == 1:
-        bot.send_message(message.chat.id, 'Вы уже зарегистрированы. \nПопробуйте ввести другую команду')
+        bot.send_message(message.chat.id, f'Вы уже зарегистрированы. \nПопробуйте ввести другую команду')
     else:
-        bot.send_message(message.chat.id, 'Добро пожаловать!')
+        bot.send_message(message.chat.id, f'Добро пожаловать!')
         time.sleep(1)
-        sent = bot.send_message(message.chat.id, "Согласны ли вы на рассылку новых событий, новостей и т.п.?", reply_markup=keyboard_yes_no(message))
+        sent = bot.send_message(message.chat.id, f'Согласны ли вы на рассылку новых событий, новостей и т.п.?', reply_markup=keyboard_yes_no(message))
         time.sleep(1)
         bot.register_next_step_handler(sent, user_registration_newsletter, id_user, first_name, last_name, nickname)
 
 def user_registration_newsletter(message, id_user, first_name, last_name, nickname):
 
     if message.text == "Да":
-        bot.send_message(message.chat.id, "Успешно!\nОтказаться от рассылки можно в меню в разделе 'Настройки'")
+        bot.send_message(message.chat.id, f'Успешно!\nОтказаться от рассылки можно в меню в разделе "Настройки"')
         db_user_insert(id_user = id_user, first_name = first_name, last_name = last_name, nickname = nickname, event_status = 1)
         time.sleep(1)
         keyboard_user(message)
     else:
-        bot.send_message(message.chat.id, "Успешно!\nПодписаться на рассылку можно в меню в разделе 'Настройки'")
+        bot.send_message(message.chat.id, f'Успешно!\nПодписаться на рассылку можно в меню в разделе "Настройки"')
         db_user_insert(id_user = id_user, first_name = first_name, last_name = last_name, nickname = nickname, event_status = 0)
         time.sleep(1)
         keyboard_user(message)
@@ -151,7 +151,7 @@ def modify_message(bot_instance, message):
         if message.from_user.id not in list_banned_users: # Если пользователя нет в бан листе
             list_banned_users.append(message.from_user.id)
             mut_user_values[message.from_user.id]['date_first'] = int(now)
-            bot.send_message(message.chat.id, 'Установлен бан на 3 минуты!' )
+            bot.send_message(message.chat.id, f'Установлен бан на 3 минуты!' )
             bot.send_photo(message.chat.id, cotik_prison)
         
         else: # Если пользователь есть в бан листе
@@ -160,11 +160,11 @@ def modify_message(bot_instance, message):
                 mut_user_values[message.from_user.id]['count'] = 0
                 mut_user_values[message.from_user.id]['date_first'] = int(now)
                 banned_remove(id_user=mut_user_values[message.from_user.id]['id_user'])
-                bot.send_message(message.chat.id, 'Бан закончился\nНе спамьте больше!')
+                bot.send_message(message.chat.id, f'Бан закончился\nНе спамьте больше!')
            
             else: # Если время ещё не прошло
                 mut_user_values[message.from_user.id]['date_last'] = mut_user_values[message.from_user.id]['date_last'] = int(now)
-                bot.send_message(message.chat.id, 'До конца бана осталось ' + str(180 - (mut_user_values[message.from_user.id]['date_last'] - mut_user_values[message.from_user.id]['date_first'])) + ' секунд')
+                bot.send_message(message.chat.id, f'До конца бана осталось {str(180 - (mut_user_values[message.from_user.id]["date_last"] - mut_user_values[message.from_user.id]["date_first"]))} секунд')
     
     else: # Если запросов меньше 15
         mut_user_values[message.from_user.id]['date_last'] = mut_user_values[message.from_user.id]['date_last'] = int(now)
@@ -202,7 +202,7 @@ def submenu(message):
             btn6 = types.KeyboardButton(text = "Отчёт за период")
             btn7 = types.KeyboardButton(text = "Назад")
             KeyBoard.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7)
-            bot.send_message(message.chat.id, "Выберите период", reply_markup = KeyBoard)
+            bot.send_message(message.chat.id, f'Выберите период', reply_markup = KeyBoard)
         else:
             error(message = message)
 
@@ -299,7 +299,7 @@ def appoint_as_administrator_end(message):
                 bot.send_message(message.chat.id, f'Возникла ошибка из-за которой вы не получите мем :(')
             bot.send_message(f'{rows[0]}. Поздравляем {rows[3]}, вы назначены администратором! Введите Админ меню, чтобы открыть меню администратора.')
         else:
-            bot.send_message(message.chat.id, "Данный пользователь уже администратор.")
+            bot.send_message(message.chat.id, f'Данный пользователь уже администратор.')
 
     except:
         bot.send_message(message.chat.id, f'Возникла ошибка. Возможно такого пользователя не существует или вы ввели неверный ID.\nПопробуйте ещё раз.')
@@ -330,7 +330,7 @@ def downgrad_as_administrator_end(message):
         time.sleep(1)
         if rows[6] == 2:
             db_user_update(id_user = id_user, status = 3)
-            bot.send_message(message.chat.id, 'Понижаю пользователя {rows[3]} .')
+            bot.send_message(message.chat.id, f'Понижаю пользователя {rows[3]}.')
             time.sleep(1)
             bot.send_message(message.chat.id, f'Права понижены!')
             try:
@@ -392,7 +392,7 @@ def user_profile_slow(message):
         else:
             newsletter_subscription = "Подключена"
 
-        bot.send_message(message.chat.id, f'Ваш ID: *{str(rows[0])}*\nВаше имя: {str(rows[1])}\nВаша фамилия: {str(rows[2])}\nВаш никнейм: {str(rows[3])}\nВаш статус: {rows [7]}\nПодписка на рассылку: {newsletter_subscription}', parse_mode="Markdown")
+        bot.send_message(message.chat.id, f'Ваш ID: *{str(rows[0])}*\nВаше имя: {str(rows[1])}\nВаша фамилия: {str(rows[2])}\nВаш никнейм: {str(rows[3])}\nВаш статус: {rows[7]}\nПодписка на рассылку: {newsletter_subscription}', parse_mode="Markdown")
     except:
         bot.send_message(message.chat.id, f'Не нашёл ваши данные:(\nВозможно вы не зарегистрированы. Введите /start для регистрации')
 
@@ -435,26 +435,26 @@ def forward_message_end(message):
 @bot.message_handler(func=lambda message: message.text == 'Оставить отзыв 💬')
 def review(message):
 
-    sent = bot.send_message(message.chat.id, 'Напишите следующим сообщением свой отзыв.')
+    sent = bot.send_message(message.chat.id, f'Напишите следующим сообщением свой отзыв.')
     bot.register_next_step_handler(sent, review_save)
 
 def review_save(message):
     if message.content_type == 'text':
         if mat_check(message=message, type_event='написании отзыва'):
-            sent = bot.send_message(message.chat.id, 'Мат запрещён!')
+            sent = bot.send_message(message.chat.id, f'Мат запрещён!')
             bot.register_next_step_handler(sent, review_save)
             time.sleep (1)
-            bot.send_message(message.chat.id, 'Напишите следующим сообщением свой отзыв.')
+            bot.send_message(message.chat.id, f'Напишите следующим сообщением свой отзыв.')
         else:
             id_user = message.from_user.id
             user_text = message.text
             db_review_insert(id_user = id_user, text_review = user_text, looked_status = 0, date = date.today(), message=message)
-            bot.send_message(message.chat.id, 'Спасибо за ваш отзыв!')
+            bot.send_message(message.chat.id, f'Спасибо за ваш отзыв!')
     else:
-        sent = bot.send_message(message.chat.id, 'Я принимаю только текст!)')
+        sent = bot.send_message(message.chat.id, f'Я принимаю только текст!)')
         bot.register_next_step_handler(sent, review_save)
         time.sleep (1)
-        bot.send_message(message.chat.id, 'Напишите следующим сообщением свой отзыв.')
+        bot.send_message(message.chat.id, f'Напишите следующим сообщением свой отзыв.')
 
 
 # Показать отзывы
@@ -565,7 +565,7 @@ def requests_select_date_show(message):
             present_month = "'"+year+'-'+Months[month]+'-%'+"'"
             row = len(db_requests_select_date(selected_date = present_month))
             if row == 0:
-                bot.send_message(message.chat.id, "За выбранный период нет данных.\nПопробуйте позже.")
+                bot.send_message(message.chat.id, f'За выбранный период нет данных.\nПопробуйте позже.')
             else:
                 for i in db_requests_select_date(selected_date = present_month):
                     try:
@@ -743,7 +743,7 @@ def event_preview(message, type_event, date_event, date_event_technical):
         row = db_user_select_by_id(id_user=message.from_user.id)
 
         if mat_check(message=message, type_event='Создании события'):
-            bot.send_message(message.chat.id, 'В вашем тексте обнаружен мат!\nДобро пожаловать в бан!')
+            bot.send_message(message.chat.id, f'В вашем тексте обнаружен мат!\nДобро пожаловать в бан!')
             bot.send_message(message.chat.id, f'Напишите администратору для разблокировки')
             administrator_call(message)
             list_banned_users.append(str(message.from_user.id))
@@ -764,7 +764,7 @@ def event_preview(message, type_event, date_event, date_event_technical):
 def save_event(message, type_event, date_event, text_event, date_event_technical):
 
     if message.text == "Да":
-        bot.send_message(message.chat.id, "Событие сохранено.")
+        bot.send_message(message.chat.id, f'Событие сохранено.')
         time.sleep(1)
         type_event = Type_event[type_event]
         db_event_insert(dtype_event = type_event, ddate_event = date_event, ddate_event_techical = date_event_technical,dtext_event = text_event)
@@ -870,7 +870,7 @@ def ban_list_delete_start(call):
                     keyboard.add(btn0)
                 bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup = keyboard)
             else:
-                bot.send_message(call.message.chat.id, 'Бан лист пустой')
+                bot.send_message(call.message.chat.id, f'Бан лист пустой')
         elif call.data == 'No':
             if len(list_banned_users) is not 0:
                 keyboard = types.InlineKeyboardMarkup()
@@ -879,7 +879,7 @@ def ban_list_delete_start(call):
                     keyboard.add(btn0)
                 bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup = keyboard)
             else:
-                bot.send_message(call.message.chat.id, 'Бан лист пустой')
+                bot.send_message(call.message.chat.id, f'Бан лист пустой')
     except:
         pass
 
@@ -933,7 +933,7 @@ def Masha (message):
         bot.send_photo(message.chat.id, i)
 
     time.sleep(1)
-    sent = bot.send_message(message.chat.id, 'Ещё?', reply_markup=keyboard_yes_no(message))
+    sent = bot.send_message(message.chat.id, f'Ещё?', reply_markup=keyboard_yes_no(message))
     bot.register_next_step_handler(sent, Masha_hub)
 
 
@@ -991,7 +991,7 @@ def search_song(message):
             
         
         except sr.UnknownValueError as e:
-            bot.send_message(message.chat.id, 'У меня не получилось разобрать ваше сообщение.\nПопробуйте ещё раз')
+            bot.send_message(message.chat.id, f'У меня не получилось разобрать ваше сообщение.\nПопробуйте ещё раз')
 
         except Exception as e:
 
@@ -1015,7 +1015,7 @@ def search_song(message):
 def call_data(call):
 
     rows = db_song_select(title_song=call.data)
-    bot.send_message(call.message.chat.id, rows[1].upper() + '\n\n' + rows[3])
+    bot.send_message(call.message.chat.id, f'{rows[1].upper()}\n\n{rows[3]}')
     try:
         audio = open(r'song'+rows[4], 'rb')
         bot.send_audio(call.message.chat.id, audio, title=rows[1])
