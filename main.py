@@ -24,7 +24,27 @@ import requests
 import schedule
 import threading
 
-# Служебные данные для бота
+
+"""
+    ТЕХНИЧЕСКИЕ ПЕРЕМЕННЫЕ
+
+    Variable:
+        TOKEN : Токен бота. В данной версии токен зашит в переменную среды сервера (Heroku)
+        YANDEX_TOKEN : Токен от Я.Диск. Нужен для работы с API Я.Диск
+        ydisk : Переменная для работы с Я.Диск
+        bot : Переменная для работы с библиотекой telebot
+        conn : Переменная с соединением с базой данных
+        logfile_audio_record : Путь к лог файлу с запросами через голосовой ввод 
+        logfile_audio_error : Путь к лог файлу с ошибками при работе конвертера аудио -> текст
+        logfile_mat : Путь к лог файлу с матами
+        now, year, month, day : Даты (сейчас, год, месяц, день)
+        month : Словарь с месяцами и их порядковыми номерами
+        mut_user_values : Словарь-счётчик сообщений пользователей
+        list_banned_users : Список забаненных пользователей
+        type_event : Словарь с типами событий
+"""
+
+
 # TOKEN = os.environ["BOT_TOKEN"]
 TOKEN = '5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU'
 YANDEX_TOKEN = 'y0_AgAAAAAO_DuQAAhmIAAAAADOUpN38O9Jqe8fTx275pqgdwJIP-pbvR8'
@@ -33,12 +53,10 @@ ydisk = yadisk.YaDisk(token=YANDEX_TOKEN)
 telebot.apihelper.ENABLE_MIDDLEWARE = True
 bot = telebot.TeleBot(TOKEN, skip_pending=True)
 
-# Лог файлы
 logfile_audio_record = f'audio_record//{str(datetime.date.today())}_record.log'
 logfile_audio_error = f'audio_record//{str(datetime.date.today())}_error.log'
 logfile_mat = f'log_files//{str(datetime.date.today())}_mat.log'
 
-# Текущие даты
 now = datetime.datetime.now()
 year = str(now.year)
 month = str(now.month)
@@ -49,7 +67,6 @@ list_banned_users = []
 
 cotik_prison = open("img\cotik_prison.jpg", "wb")
 
-# Словари
 Months = {'Январь': '01', 'Февраль': '02', 'Март': '03', 'Апрель': '04', 'Май': '05', 'Июнь': '06', 'Июль': '07',
           'Август': '08', 'Сентябрь': '09', 'Октябрь': '10', 'Ноябрь': '11', 'Декабрь': '12'}
 Type_event = {'Орлятский круг': '1', 'Песенный зачёт': '2', 'Спевка': '3', 'Квартирник': '4'}
@@ -261,7 +278,7 @@ def review_submenu(message):
 # Подменю "Настройки"
 @bot.message_handler(func=lambda message: message.text == 'Настройки ⚙️')
 def review_submenu(message):
-    get_keyboard_setting_submenu(message, text='Открываю')
+    get_keyboard_setting_submenu(message)
 
 
 # Назначение администратора
@@ -625,11 +642,11 @@ def date_between_end(message, start_date):
             start_date = f"'{start_date}'"
             final_date = f"'{final_date}'"
             requests_list = []
-            if len(db_select_requests_the_period(start_date=start_date, final_date=final_date)) == 0:
+            if len(db_select_requests_period(start_date=start_date, final_date=final_date)) == 0:
                 bot.send_message(message.chat.id, f'За выбранный период нет данных.\nПопробуйте позже.')
             else:
                 try:
-                    for i in db_select_requests_the_period(start_date=start_date, final_date=final_date):
+                    for i in db_select_requests_period(start_date=start_date, final_date=final_date):
                         requests_list.append(f'{i[0]} : {str(i[1])}\n')
                         requests_list.sort()
                     bot.send_message(message.chat.id, (''.join(requests_list)))

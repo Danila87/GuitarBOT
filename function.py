@@ -26,6 +26,19 @@ import yadisk
 import threading
 
 
+"""
+    ТЕХНИЧЕСКИЕ ПЕРЕМЕННЫЕ
+
+    Variable:
+        TOKEN : Токен бота. В данной версии токен зашит в переменную среды сервера (Heroku)
+        YANDEX_TOKEN : Токен от Я.Диск. Нужен для работы с API Я.Диск
+        ydisk : Переменная для работы с Я.Диск
+        bot : Переменная для работы с библиотекой telebot
+        conn : Переменная с соединением с базой данных
+        cotik : Я хз почему не сделал через with ... as но это просто фотка котика
+        logfile_mat : путь к лог файлу с матами
+"""
+
 #TOKEN = os.environ["BOT_TOKEN"]
 TOKEN = '5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU'
 YANDEX_TOKEN = 'y0_AgAAAAAO_DuQAAhmIAAAAADOUpN38O9Jqe8fTx275pqgdwJIP-pbvR8'
@@ -38,9 +51,14 @@ logfile_mat = 'log_files//' + str(datetime.date.today()) + '_mat.log'
 
 # РАЗЛИЧНЫЕ МЕНЮ ПОЛЬЗОВАТЕЛЕЙ
 
-
-# Админ меню
 def get_keyboard_admin(message):
+
+    """
+    Вызов меню администратора 
+
+    Args:
+        message : объект message от telebot
+    """
 
     keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard=True)
     btn_song_list = types.KeyboardButton(text="Список песен 📔")
@@ -54,8 +72,14 @@ def get_keyboard_admin(message):
     bot.send_message(message.chat.id, "Открываю главное меню", reply_markup = keyboard)
 
 
-# Пользовательское меню 
 def get_keyboard_user(message):
+
+    """
+    Вызов меню пользователя
+
+    Args:
+        message : объект message от telebot
+    """
 
     keyboard = types.ReplyKeyboardMarkup(row_width = 3, resize_keyboard=True)
     btn_song_list = types.KeyboardButton(text="Список песен 📔")
@@ -66,8 +90,14 @@ def get_keyboard_user(message):
     bot.send_message(message.chat.id, "Открываю меню", reply_markup = keyboard)
 
 
-# Да/Нет клавиатура
 def get_keyboard_yes_no():
+
+    """
+    Вызов меню Да/нет
+
+    Returns:
+        keyboard: возвращает keyboard, которая должна вставать в send_message
+    """
 
     keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard=True)
     btn_yes = types.KeyboardButton(text="Да")
@@ -76,8 +106,14 @@ def get_keyboard_yes_no():
     return keyboard
 
 
-# Подменю настроек
-def get_keyboard_setting_submenu(message, text):
+def get_keyboard_setting_submenu(message):
+
+    """
+    Вызов меню настроек
+
+    Args:
+        message : объект message от telebot
+    """
 
     rows = db_select_user_by_id(id_user = message.from_user.id)
     keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard = True)
@@ -93,13 +129,20 @@ def get_keyboard_setting_submenu(message, text):
         btn_ban_list = types.KeyboardButton(text="Бан лист")
         btn_admin = types.KeyboardButton(text="Администраторы 💼")
         keyboard.add(btn_show_data, btn_newsletter, btn_admin, btn_song_books, btn_help, btn_ban_list, btn_back)
-        bot.send_message(message.chat.id, text, reply_markup = keyboard)
+        bot.send_message(message.chat.id, 'Открываю', reply_markup = keyboard)
     else:
         keyboard.add(btn_show_data, btn_newsletter, btn_song_books, btn_help, btn_back)
-        bot.send_message(message.chat.id, text, reply_markup = keyboard)
+        bot.send_message(message.chat.id, 'Открываю', reply_markup = keyboard)
 
-# Подменю "События"
+
 def get_keyboard_event_submenu(message):
+
+    """
+    Вызов меню событий
+
+    Args:
+        message : объект message от telebot
+    """
 
     rows = db_select_user_by_id(id_user = message.from_user.id)    
     keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard=True)
@@ -114,8 +157,14 @@ def get_keyboard_event_submenu(message):
         bot.send_message(message.chat.id, "Открываю", reply_markup = keyboard)
 
 
-# Подменю "Отзывы"
 def get_keyboard_review_submenu(message):
+
+    """
+    Вызов меню отзывов
+
+    Args:
+        message : объект message от telebot
+    """
 
     rows = db_select_user_by_id(id_user = message.from_user.id)
 
@@ -131,8 +180,14 @@ def get_keyboard_review_submenu(message):
         error(message = message)
 
 
-# Подменю "Администраторы"
 def get_keyboard_admin_edit_submenu(message):
+
+    """
+    Вызов меню администраторов
+
+    Args:
+        message : объект message от telebot
+    """
 
     rows = db_select_user_by_id(id_user = message.from_user.id)
 
@@ -148,8 +203,14 @@ def get_keyboard_admin_edit_submenu(message):
         error(message = message)
 
 
-# Кнопка с ссылкой на администратора 
 def get_administrator_call(message):
+
+    """
+    Вызов кнопки-ссылки на администратора
+
+    Args:
+        message : объект message от telebot
+    """
 
     keyboard = types.InlineKeyboardMarkup()
     btn_admin = types.InlineKeyboardButton("Администратор", url='https://t.me/Danila877')
@@ -160,8 +221,14 @@ def get_administrator_call(message):
 # ФУНКЦИИ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ
 
 
-# Получение всех пользователей
 def db_select_users_all():
+
+    """
+    SQL запрос для получения списка всех пользователей
+
+    Returns:
+        rows: Список кортежей с данными
+    """
 
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM Users LEFT OUTER JOIN Role ON Users.Id_role = Role.Id_role")
@@ -169,8 +236,14 @@ def db_select_users_all():
     return rows
 
 
-# Все айди чаты согласные на рассылку
 def db_select_user_by_newsletter():
+
+    """
+    SQL запрос для получения пользователей, согласных на рассылку
+
+    Returns:
+        rows: Список кортежей с данными
+    """
 
     cursor = conn.cursor()
     cursor.execute("SELECT id_user FROM Users WHERE Event_status = 1")
@@ -178,8 +251,17 @@ def db_select_user_by_newsletter():
     return rows
 
 
-# Конкретный человек по айди
 def db_select_user_by_id(id_user:int):
+
+    """
+    SQL запрос для получения конкретного пользователя
+
+    Args:
+        id_user (int): Id пользователя, которого надо получить
+
+    Returns:
+        rows: Список кортежей с данными
+    """
 
     cursor = conn.cursor()
     try:
@@ -190,8 +272,18 @@ def db_select_user_by_id(id_user:int):
         pass
 
 
-# Внесение данных о новом пользователе
-def db_insert_user(id_user: int, first_name: str, last_name:str, nickname: str, event_status: int):
+def db_insert_user(id_user:int, first_name:str=None, last_name:str=None, nickname:str=None, event_status:int=0):
+
+    """
+    SQL запрос для внесения данных о пользователе
+
+    Args:
+        id_user (int): id пользователя
+        first_name (str): Имя
+        last_name (str): Фамилия
+        nickname (str): Никнейм
+        event_status (int): Статус подписки (1-Да, 2-Нет)
+    """
 
     try:
         cursor = conn.cursor()
@@ -201,8 +293,17 @@ def db_insert_user(id_user: int, first_name: str, last_name:str, nickname: str, 
         pass
 
 
-# Проверка на регистрацию пользователя
-def db_select_user_registration(id_user: int):
+def db_select_user_registration(id_user:int):
+
+    """
+    SQL запрос для проверки пользователя на регистрацию
+
+    Args:
+        id_user (int): id пользователя которого нужно проверить
+
+    Returns:
+        rows: возвращает длину результата (кол-во найденных записей)
+    """
 
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM Users WHERE id_user = ?', (id_user,))
@@ -211,24 +312,44 @@ def db_select_user_registration(id_user: int):
     return row
 
 
-# Изменение статуса рассылки у пользователя
 def db_update_user_newsletter(status: int, id_user: int):
+
+    """
+    SQL запрос для изменения статуса рассылки у пользователя
+
+    Args:
+        status (int): Статус подписки. 1 - Подключено, 2 - Отключено
+        id_user (int): Id Пользователя
+    """
 
     cursor = conn.cursor()
     cursor.execute("UPDATE Users SET Event_status = ? WHERE id_user = ?", (status, id_user))
     conn.commit()
 
 
-# Изменение администраторов
-def db_update_user(id_user:int, status):
+def db_update_user(id_user:int, status:int):
+
+    """
+    SQL запрос для повышения/понижения прав администратора
+
+    Args:
+        id_user (int): Id Пользователя
+        status (int): Статус(роль) пользователя. 1 - Суперпользователь, 2 - Администратор, 3 - Обычный пользователь
+    """
 
     cursor = conn.cursor()
     cursor.execute("UPDATE Users SET Id_role = ? WHERE id_user = ?", (status, id_user))
     conn.commit()
 
 
-# Показ всех администраторов
 def db_select_all_admin():
+
+    """
+    SQL запрос для получения всех администраторов
+
+    Returns:
+        rows: Возвращает список кортежей (все данных всех админов)
+    """
 
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM Users LEFT OUTER JOIN Role ON Users.Id_role = Role.Id_role WHERE Users.Id_role = 2")
@@ -239,19 +360,34 @@ def db_select_all_admin():
 # ВСЕ ФУНКЦИИ РАБОТЫ С ОТЗЫВАМИ
 
 
-# Вставка отзывов
-def db_insert_review(id_user:int, text_review: str, looked_status: int, date:str, message):
+def db_insert_review(id_user:int, text_review:str, looked_status:int, date:str):
+
+    """
+    SQL запрос для вставки отзыва от пользователя
+
+    Args:
+        id_user (int): Id пользователя
+        text_review (str): Текст отзыва
+        looked_status (int): Статус (Просмотрено/ не просмотрено)
+        date (str): Дата
+    """
 
     try:
         cursor = conn.cursor()
         cursor.execute('INSERT INTO Reviews (id_user, text_review, lookeed_status, date) VALUES (?, ?, ?, ?)', (id_user, text_review, looked_status, date))
         conn.commit()
     except:
-        bot.send_message(message.chat.id, "Иди отсюда, черт")
+        pass
 
 
-# Поиск отзывов
 def db_select_reviews():
+
+    """
+    SQL запрос для получения всех отзывов
+
+    Returns:
+        rows: Возвращает список кортежей
+    """
 
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM Reviews LEFT OUTER JOIN Users ON Reviews.id_user = Users.id_user WHERE date > date('now', '-7 days')")
@@ -259,8 +395,14 @@ def db_select_reviews():
     return rows
 
 
-# Обновление отзывов
-def db_update_review(id_review: int):
+def db_update_review(id_review:int):
+
+    """
+    SQL запрос для обновления статуса отзыва
+
+    Args:
+        id_review (int): Id отзыва для обновления
+    """
 
     cursor = conn.cursor()
     cursor.execute('UPDATE Reviews SET lookeed_status = 1 WHERE id_review = ?',(id_review,))
@@ -270,8 +412,14 @@ def db_update_review(id_review: int):
 # ВСЕ ФУНКЦИИ РАБОТЫ С ЗАПРОСАМИ
 
 
-# Вывод количества запросов за всё время
 def db_requests_count():
+
+    """
+    SQL запрос для вывода запросов за всё время
+
+    Returns:
+        rows: Возвращает список запросов  
+    """
 
     cursor = conn.cursor()
     cursor.execute('SELECT requests, COUNT (*) AS Count FROM Requests GROUP BY requests ORDER BY Count DESC')
@@ -279,8 +427,16 @@ def db_requests_count():
     return rows
 
 
-# Внесение данных в таблицу с запросами
-def db_insert_request(id_user: int, requests: str, date: str):
+def db_insert_request(id_user:int, requests:str, date:str):
+
+    """
+    SQL запрос для внесения запросов
+
+    Args:
+        id_user (int): Id пользователя
+        requests (str): Текст запроса
+        date (str): Дата запроса
+    """
 
     try:
         cursor = conn.cursor()
@@ -289,8 +445,19 @@ def db_insert_request(id_user: int, requests: str, date: str):
     except:
         pass
 
-# Вывод запросов по дате
+
 def db_select_requests_by_date(selected_date:str):
+
+    """
+    SQL запрос дла получения запросов за определённую дату
+
+    Args:
+        selected_date (str): Дата по которой нужно получить запросы. Можно в качестве аргумента передавать год, год-месяц, год-месяц-день.
+                            Например "2022-01-% получит записи за весь январь 2022 года"
+
+    Returns:
+        rows: Возвращает список кортежей (список запросов)
+    """
 
     cursor = conn.cursor()
     query = 'SELECT requests, COUNT (*) AS Count FROM Requests WHERE date LIKE ' + selected_date + ' GROUP BY requests ORDER BY Count DESC'
@@ -299,8 +466,18 @@ def db_select_requests_by_date(selected_date:str):
     return rows
 
 
-# Вывод запросов за выбранный период
-def db_select_requests_the_period(start_date:str, final_date:str):
+def db_select_requests_period(start_date:str, final_date:str):
+
+    """
+    SQL запрос для получения запросов за определённый период
+
+    Args:
+        start_date (str): Начальная дата
+        final_date (str): Конечная дата
+
+    Returns:
+        rows: Возвращает список кортежей (список запросов)
+    """
 
     cursor = conn.cursor()
     query = "SELECT requests, COUNT (*) AS Count FROM Requests WHERE date BETWEEN " + start_date + " AND " + final_date + " GROUP BY requests ORDER BY Count DESC"
@@ -312,8 +489,14 @@ def db_select_requests_the_period(start_date:str, final_date:str):
 # ВСЕ ФУНКЦИИ РАБОТЫ С СОБЫТИЯМИ
 
 
-# Все типы событий
 def db_select_event_types():
+
+    """
+    SQL запрос для получения всех типов событий
+
+    Returns:
+        rows: Список кортежей (типы событий)
+    """
 
     cursor = conn.cursor()
     cursor.execute("SELECT Name_event FROM Type_event")
@@ -321,8 +504,20 @@ def db_select_event_types():
     return rows
 
 
-# Вставка события
-def db_insert_event(dtype_event: int, ddate_event: str, dtext_event: str, ddate_event_techical: str):
+def db_insert_event(dtype_event:int, ddate_event:str, dtext_event:str, ddate_event_techical:str):
+
+    """
+    SQL запрос для вставки нового события
+
+    P.S. Здесь используется декоративная дата и техническая. Декоративная дата для красивого отображения и записывается например так "6 апреля", в то же время
+    техническая дата нужна для проверки актуальности события и записывается например так "2022-11-01"
+
+    Args:
+        dtype_event (int): Тип события
+        ddate_event (str): Дата события (декоративная)
+        dtext_event (str): Текст события
+        ddate_event_techical (str): Техническая дата
+    """
 
     try:
         cursor = conn.cursor()
@@ -331,8 +526,18 @@ def db_insert_event(dtype_event: int, ddate_event: str, dtext_event: str, ddate_
     except:
         pass
 
-# Получение событий
+
 def db_select_latest_event(type_event: str):
+
+    """
+    SQL запрос для получения актуального события
+
+    Args:
+        type_event (str): Тип события, которое нужно найти
+
+    Returns:
+        rows: Возвращает список кортежей (данные о событии)
+    """
 
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM Events LEFT OUTER JOIN Type_event ON Events.Event_type = Type_event.Id_event WHERE Event_type = ? AND Date_event_technical > date('now') ORDER BY Id_event DESC LIMIT 1", (type_event,))
@@ -343,8 +548,14 @@ def db_select_latest_event(type_event: str):
 # ВСЕ ФУНКЦИИ РАБОТЫ С ПЕСНЯМИ
 
 
-# Поиск всех песен
 def db_select_song_all():
+
+    """
+    SQL запрос для получения всех песен
+
+    Returns:
+        rows: Возвращает список кортежей
+    """
 
     cursor = conn.cursor()
     try:
@@ -355,8 +566,18 @@ def db_select_song_all():
         pass
 
 
-# Поиск песни по заголовку
-def db_select_song(title_song):
+
+def db_select_song(title_song:str):
+
+    """
+    SQL запрос для получения песни по её заголовку
+
+    Args:
+        title_song (str): Заголовок песни, которую нужно найти
+
+    Returns:
+        rows: Возвращает список коретежей (данные о песне)
+    """
 
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM songs WHERE Title_song = ?',(title_song,))
@@ -364,8 +585,17 @@ def db_select_song(title_song):
     return rows
 
 
-# Поиск песни по категории
-def db_select_song_by_type(type_song):
+def db_select_song_by_type(type_song:str):
+
+    """
+    SQL запрос для получения песен определённой категории
+
+    Args:
+        type_song (str): Категория, по которой нужно отобрать песни
+
+    Returns:
+        rows: Возвращает список кортежей 
+    """
 
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM Songs LEFT OUTER JOIN Type_song ON Songs.Type_song = Type_song.id_type WHERE Type_song.Type_song = ?', (type_song,))
@@ -373,8 +603,14 @@ def db_select_song_by_type(type_song):
     return rows
 
 
-# Получение категорий песен
 def db_select_song_type():
+
+    """
+    SQL запрос для получения всех категорий песен
+
+    Returns:
+        rows: Возвращает список кортежей (категории песен)
+    """
 
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM Type_song ')
@@ -382,8 +618,15 @@ def db_select_song_type():
     return rows
 
 
-# Отбор песен
-def song_search(message, title_song):
+def song_search(message, title_song:str = 'None'):
+
+    """
+    Отбор всех подходящих песен по заголовку пользователя
+
+    Args:
+        message : объект message от telebot
+        title_song (str): Название песни, по которой идёт отбор
+    """
 
     keyboard = types.InlineKeyboardMarkup()
     key = False
@@ -412,8 +655,14 @@ def song_search(message, title_song):
 # ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 
 
-# Вывод ошибки
 def error(message):
+
+    """
+    Вывод ошибки. Выводит картинку и ссылку на Администратора
+
+    Args:
+        message : объект message от telebot
+    """
 
     try:
         time.sleep(0.5)
@@ -427,17 +676,31 @@ def error(message):
         bot.send_photo(message.chat.id, cotik)
 
 
-# Все песенники
 def db_select_songbook_all():
- 
+
+    """
+    SQL запрос для получения списка всех песенников
+
+    Returns:
+        rows: Возвращает список кортежей
+    """
+
     cursor = conn.cursor()
+
     cursor.execute("SELECT * FROM Song_book")
     rows = cursor.fetchall()
     return rows
 
 
-# Песенник по заголовку
-def db_select_songbook_by_title(message, song_book_title):
+def db_select_songbook_by_title(message, song_book_title:str = "Песенник ИОСПО"):
+
+    """
+    SQL запрос для получения песенника по заголовку. Отправляет файл с песенником
+
+    Args:
+        message : объект message от telebot
+        song_book_title (str): Заголовок песенника. По дефолту стоит песенник ИО СПО
+    """
 
     cursor = conn.cursor()
     cursor.execute("SELECT file_path FROM Song_book WHERE title_book = ?", (song_book_title,))
@@ -447,8 +710,17 @@ def db_select_songbook_by_title(message, song_book_title):
     bot.send_document(message.chat.id, file)
 
 
-# Получение фотографии для Маши
 def get_img_from_Masha(message):
+
+    """
+    Функция для получения фотографии Тимоти Шаламе или Джонни Деппа для Маши. Сделал чисто по приколу
+
+    Args:
+        message : объект message от telebot
+
+    Returns:
+        img_url: Вовзращает ссылку откуда скачивать фото
+    """
 
     bot.send_message(message.chat.id, 'Формирую списки\n[////                ]')
     time.sleep(1.5)
@@ -536,8 +808,18 @@ def get_img_from_Masha(message):
         bot.send_message(message.chat.id, 'Фотографии закончились. ')
 
 
-# Перевод аудио в текст
 def audio_to_text(dest_name: str, message):
+
+    """
+    Перевод аудио в текст
+
+    Args:
+        dest_name (str): Пусть до файла
+        message : объект message от telebot
+
+    Returns:
+        result: Возвращает текст из аудиосообщения
+    """
 
     try:
     # Функция для перевода аудио , в формате ".vaw" в текст
@@ -552,9 +834,19 @@ def audio_to_text(dest_name: str, message):
         bot.send_message(message.chat.id, 'Возникла ошибка.\nПопробуйте ещё раз.')
 
 
-# Проверка на мат
-def mat_check(message, type_event):
-    
+def mat_check(message, type_event:str = 'None'):
+
+    """
+    Проверка сообщения на мат
+
+    Args:
+        message : объект message от telebot
+        type_event (str): Тип события, который записывает функция в логи (Создание события, написание запроса и т.д.)
+
+    Returns:
+        True: Возвращает True в случае если в сообщении есть мат. В других случаях ничего не возвращает
+    """
+
     if message.content_type == 'text':
         row = db_select_user_by_id(id_user=message.from_user.id)
         words = message.text.split(' ')
@@ -572,8 +864,16 @@ def mat_check(message, type_event):
 
                 return True
                 
-# Авторегистрация
-def auto_registration(message, event_status):
+
+def auto_registration(message, event_status:int = 0):
+
+    """
+    Функция для авторегистрации пользователя
+
+    Args:
+        message : объект message от telebot
+        event_status (int): Статус подписки. По умолчанию равен 0 (Отключена)
+    """
 
     rows = db_select_user_by_id(id_user = message.from_user.id)
     if rows == None:
