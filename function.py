@@ -51,43 +51,6 @@ logfile_mat = 'log_files//' + str(datetime.date.today()) + '_mat.log'
 
 # РАЗЛИЧНЫЕ МЕНЮ ПОЛЬЗОВАТЕЛЕЙ
 
-def get_keyboard_admin(message):
-
-    """
-    Вызов меню администратора 
-
-    Args:
-        message : объект message от telebot
-    """
-
-    keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard=True)
-    btn_song_list = types.KeyboardButton(text="Список песен 📔")
-    btn_reviews = types.KeyboardButton(text="Отзывы 💬")
-    btn_requests = types.KeyboardButton(text="Вывести запросы 📈")
-    btn_events = types.KeyboardButton(text="События 📅")
-    btn_resend_message = types.KeyboardButton(text="Переслать сообщение ✉️")
-    btn_settings = types.KeyboardButton(text="Настройки ⚙️")
-    keyboard.add(btn_song_list, btn_reviews, btn_requests, btn_events, btn_resend_message ,btn_settings)
-    time.sleep(1)
-    bot.send_message(message.chat.id, "Открываю главное меню", reply_markup = keyboard)
-
-
-def get_keyboard_user(message):
-
-    """
-    Вызов меню пользователя
-
-    Args:
-        message : объект message от telebot
-    """
-
-    keyboard = types.ReplyKeyboardMarkup(row_width = 3, resize_keyboard=True)
-    btn_song_list = types.KeyboardButton(text="Список песен 📔")
-    btn_push_reviews = types.KeyboardButton(text="Оставить отзыв 💬")
-    btn_events = types.KeyboardButton(text="События 📅")
-    btn_settings = types.KeyboardButton(text="Настройки ⚙️")
-    keyboard.add(btn_song_list, btn_push_reviews, btn_events, btn_settings)
-    bot.send_message(message.chat.id, "Открываю меню", reply_markup = keyboard)
 
 def get_main_menu(message):
     rows = db_select_user_by_id(id_user=message.from_user.id)
@@ -192,7 +155,7 @@ def get_keyboard_review_submenu(message):
     btn_rewievs_all = types.KeyboardButton(text="Показать отзывы")
     btn_back = types.KeyboardButton(text="Назад")
 
-    if rows[6] == 1 or rows[6] == 2:
+    if rows[6] in (1,2):
         keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard = True)
         keyboard.add(btn_rewievs_all, btn_pull_rewievs, btn_back)
         bot.send_message(message.chat.id, "Открываю", reply_markup = keyboard)

@@ -189,20 +189,6 @@ def modify_message(bot_instance, message):
         mut_user_values[message.from_user.id]['count'] += 1
 
 
-# Админ меню
-@bot.message_handler(func=lambda message: message.text == 'Админ меню')
-def admin_menu(message):
-    rows = db_select_user_by_id(message.from_user.id)
-    bot.send_message(message.chat.id, f'Проверяю данные...')
-    time.sleep(1.5)
-
-    if rows[6] == 1 or rows[6] == 2:
-        get_main_menu(message)
-    else:
-        bot.send_message(message.chat.id, f'В доступе отказано.')
-        error(message=message)
-
-
 # Подменю
 @bot.message_handler(func=lambda message: message.text == 'Вывести запросы 📈' or message.text == 'Назад')
 def submenu(message):
