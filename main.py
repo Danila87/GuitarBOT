@@ -462,7 +462,7 @@ def review_save(message):
 def review_show(message):
     rows = db_select_user_by_id(message.from_user.id)
 
-    if rows[6] in (1, 2) and len(rows) != 0:
+    if rows[6] in (1, 2) and rows:
         review_list = []
         count = 0
         for i in db_select_reviews():
@@ -626,9 +626,7 @@ def date_between_end(message, start_date):
             start_date = f"'{start_date}'"
             final_date = f"'{final_date}'"
             requests_list = []
-            if len(db_select_requests_period(start_date=start_date, final_date=final_date)) == 0:
-                bot.send_message(message.chat.id, f'За выбранный период нет данных.\nПопробуйте позже.')
-            else:
+            if db_select_requests_period(start_date=start_date, final_date=final_date):
                 try:
                     for i in db_select_requests_period(start_date=start_date, final_date=final_date):
                         requests_list.append(f'{i[0]} : {str(i[1])}\n')
@@ -636,6 +634,8 @@ def date_between_end(message, start_date):
                     bot.send_message(message.chat.id, (''.join(requests_list)))
                 except:
                     error(message)
+            else:
+                bot.send_message(message.chat.id, f'За выбранный период нет данных.\nПопробуйте позже.')
         else:
             bot.send_message(message.chat.id, f'Возникла ошибка ввода, попробуйте еще раз.')
             time.sleep(1)
@@ -830,7 +830,7 @@ def ban_list_show(message):
 
     if rows[6] == 1:
 
-        if len(list_banned_users) is not 0:
+        if list_banned_users:
             keyboard = types.InlineKeyboardMarkup()
             for i in list_banned_users:
                 btn = types.InlineKeyboardButton(i, callback_data=i)
@@ -857,7 +857,7 @@ def ban_list_delete_start(call):
     try:
         if call.data == 'Yes':
             list_banned_users.remove(user_ban_remove.id_user)
-            if len(list_banned_users) is not 0:
+            if list_banned_users:
                 keyboard = types.InlineKeyboardMarkup()
                 for i in list_banned_users:
                     btn = types.InlineKeyboardButton(i, callback_data=i)
@@ -868,7 +868,7 @@ def ban_list_delete_start(call):
                 bot.send_message(call.message.chat.id, f'Бан лист пустой')
 
         elif call.data == 'No':
-            if len(list_banned_users) is not 0:
+            if list_banned_users:
                 keyboard = types.InlineKeyboardMarkup()
                 for i in list_banned_users:
                     btn = types.InlineKeyboardButton(i, callback_data=i)
