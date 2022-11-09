@@ -815,7 +815,7 @@ def event_newsletter(message, type_event):
         sent = bot.send_message(message.chat.id, f'Я вас непонимаю. Введите "Да" или "Нет"')
         bot.register_next_step_handler(sent, event_newsletter, type_event)
 
-# TODO Некорректно выводит события. Актуальные не выводит. Проверить запрос
+
 # Вывод ближайших событий
 @bot.message_handler(func=lambda message: message.text == 'Показать ближайшие события')
 def event_show(message):
