@@ -207,7 +207,7 @@ def submenu(message):
             keyboard.add(btn_1, btn_2, btn_3, btn_4, btn_5, btn_6, btn_7)
             bot.send_message(message.chat.id, f'Выберите период', reply_markup=keyboard)
         else:
-            error(message=message)
+            error(message)
 
     if message.text == 'Назад':
         if rows[6] in (1, 2):
@@ -392,12 +392,9 @@ def user_profile_slow(message):
         else:
             newsletter_subscription = 'Подключена'
 
-        bot.send_message(message.chat.id,
-                         f'Ваш ID: *{str(rows[0])}*\nВаше имя: {str(rows[1])}\nВаша фамилия: {str(rows[2])}\nВаш никнейм: {str(rows[3])}\nВаш статус: {rows[7]}\nПодписка на рассылку: {newsletter_subscription}',
-                         parse_mode='Markdown')
+        bot.send_message(message.chat.id, f'Ваш ID: *{str(rows[0])}*\nВаше имя: {str(rows[1])}\nВаша фамилия: {str(rows[2])}\nВаш никнейм: {str(rows[3])}\nВаш статус: {rows[7]}\nПодписка на рассылку: {newsletter_subscription}', parse_mode='Markdown')
     except:
-        bot.send_message(message.chat.id,
-                         f'Не нашёл ваши данные:(\nВозможно вы не зарегистрированы. Введите /start для регистрации')
+        bot.send_message(message.chat.id, f'Не нашёл ваши данные:(\nВозможно вы не зарегистрированы. Введите /start для регистрации')
 
 
 # Пересылка различных сообщений пользователям
@@ -408,13 +405,11 @@ def forward_message_start(message):
     btn_back = types.KeyboardButton(text='Отмена')
     keyboard.add(btn_back)
 
-    if rows[6] == 2 or rows[6] == 1:
-        sent = bot.send_message(message.chat.id,
-                                f'Следующее сообщение будет отправлено пользовалям у которых подключена рассылка.',
-                                reply_markup=keyboard)
+    if rows[6] in (1,2):
+        sent = bot.send_message(message.chat.id, f'Следующее сообщение будет отправлено пользовалям у которых подключена рассылка.', reply_markup=keyboard)
         bot.register_next_step_handler(sent, forward_message_end)
     else:
-        error(message=message)
+        error(message)
 
 # TODO выдаёт почему то "Возникла ошибка" хотя сообщения рассылает
 def forward_message_end(message):
@@ -434,7 +429,7 @@ def forward_message_end(message):
             bot.send_message(message.chat.id, f'Сообщение успешно разослано.')
         except:
             bot.send_message(message.chat.id, f'Возникла ошибка')
-    get_main_menu(message=message)
+    get_main_menu(message)
 
 # Оставить отзыв
 @bot.message_handler(func=lambda message: message.text == 'Оставить отзыв 💬')
@@ -490,7 +485,7 @@ def requests_by_date(message):
     requests_list = []
     rows = db_select_user_by_id(message.from_user.id)
 
-    if rows[6] == 1 or rows[6] == 2:
+    if rows[6] in (1, 2):
 
         if message.text == 'За всё время':
             row = len(db_requests_count())
@@ -511,7 +506,7 @@ def requests_by_date(message):
                     try:
                         requests_list.append(f'{i[0]} : {str(i[1])}\n')
                     except:
-                        error(message=message)
+                        error(message)
                 bot.send_message(message.chat.id, (''.join(requests_list)))
 
         if message.text == 'За месяц':
@@ -524,7 +519,7 @@ def requests_by_date(message):
                     try:
                         requests_list.append(f'{i[0]} : {str(i[1])}\n')
                     except:
-                        error(message=message)
+                        error(message)
                 bot.send_message(message.chat.id, (''.join(requests_list)))
 
         if message.text == 'За год':
@@ -537,10 +532,10 @@ def requests_by_date(message):
                     try:
                         requests_list.append(f'{i[0]} : {str(i[1])}\n')
                     except:
-                        error(message=message)
+                        error(message)
                 bot.send_message(message.chat.id, (''.join(requests_list)))
     else:
-        error(message=message)
+        error(message)
 
 
 # Поиск запросов по конкретному месяцу
@@ -548,20 +543,18 @@ def requests_by_date(message):
 def requests_select_date(message):
     rows = db_select_user_by_id(message.from_user.id)
 
-    if rows[6] == 1 or rows[6] == 2:
+    if rows[6] in (1, 2):
         chat_id = message.chat.id
         sent = bot.send_message(chat_id, f'Введите месяц. Например "Май"')
         bot.register_next_step_handler(sent, requests_select_date_show)
     else:
-        error(message=message)
+        error(message)
 
 
 def requests_select_date_show(message):
     if message.content_type == 'text':
         month = message.text
-        result = re.match(
-            r'Январь\b|Февраль\b|Март\b|Апрель\b|Май\b|Июнь\b|Июль\b|Август\b|Сентябрь\b|Октябрь\b|Ноябрь\b|Декабрь\b',
-            month)
+        result = re.match(r'Январь\b|Февраль\b|Март\b|Апрель\b|Май\b|Июнь\b|Июль\b|Август\b|Сентябрь\b|Октябрь\b|Ноябрь\b|Декабрь\b', month)
 
         if result != None:
             requests_list = []
@@ -574,7 +567,7 @@ def requests_select_date_show(message):
                     try:
                         requests_list.append(f'{i[0]} : {str(i[1])}\n')
                     except:
-                        error(message=message)
+                        error(message)
                 bot.send_message(message.chat.id, (''.join(requests_list)))
         else:
             bot.send_message(message.chat.id, f'Ошибка ввода, попробуйте еще раз!)')
@@ -594,11 +587,11 @@ def requests_select_date_show(message):
 def request_select_date_between(message):
     rows = db_select_user_by_id(message.from_user.id)
 
-    if rows[6] == 1 or rows[6] == 2:
+    if rows[6] in (1, 2):
         sent = bot.send_message(message.chat.id, f'Введите начальную дату в формате 2022-01-01')
         bot.register_next_step_handler(sent, date_between_start)
     else:
-        error(message=message)
+        error(message)
 
 
 def date_between_start(message):
@@ -642,7 +635,7 @@ def date_between_end(message, start_date):
                         requests_list.sort()
                     bot.send_message(message.chat.id, (''.join(requests_list)))
                 except:
-                    error(message=message)
+                    error(message)
         else:
             bot.send_message(message.chat.id, f'Возникла ошибка ввода, попробуйте еще раз.')
             time.sleep(1)
@@ -673,7 +666,7 @@ def event_create_start(message):
         sent = bot.send_message(message.chat.id, f'Выберите тип события.', reply_markup=keyboard)
         bot.register_next_step_handler(sent, date_event)
     else:
-        error(message=message)
+        error(message)
 
 
 def date_event(message):
@@ -851,6 +844,7 @@ def ban_list_show(message):
 # Удаление пользователя из бан листа
 @bot.callback_query_handler(func=lambda call: call.data in str(list_banned_users) or call.data == 'Yes' or call.data == 'No')
 def ban_list_delete_start(call):
+
     if call.data in str(list_banned_users):
         user_ban_remove.id_user = int(call.data)
         keyboard = types.InlineKeyboardMarkup()
@@ -903,6 +897,7 @@ def list_of_songs(message):
 # Обработка типов песен и вывод списка песен
 @bot.callback_query_handler(func=lambda call: call.data == 'back_to_category' or call.data in [x[1] for x in db_select_song_type()] or call.data == 'next_page' or call.data == 'back_page')
 def list_of_song_by_type1(call):
+
     if call.data in [x[1] for x in db_select_song_type()]:
         btn_back = types.InlineKeyboardButton('Вернуться к категориям', callback_data='back_to_category')
         row = db_select_song_by_type(type_song=call.data)
