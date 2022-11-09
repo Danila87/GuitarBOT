@@ -69,6 +69,7 @@ cotik_prison = open("img\cotik_prison.jpg", "wb")
 
 Months = {'Январь': '01', 'Февраль': '02', 'Март': '03', 'Апрель': '04', 'Май': '05', 'Июнь': '06', 'Июль': '07',
           'Август': '08', 'Сентябрь': '09', 'Октябрь': '10', 'Ноябрь': '11', 'Декабрь': '12'}
+
 Type_event = {'Орлятский круг': '1', 'Песенный зачёт': '2', 'Спевка': '3', 'Квартирник': '4'}
 
 
@@ -76,7 +77,6 @@ Type_event = {'Орлятский круг': '1', 'Песенный зачёт':
 class UserBanRemove():
     def __init__(self, id_user):
         self.id_user = id_user
-
 
 user_ban_remove = UserBanRemove('0')
 
@@ -136,12 +136,12 @@ def user_registration_newsletter(message):
     if message.text == "Да":
         bot.send_message(message.chat.id, f'Успешно!\nОтказаться от рассылки можно в меню в разделе "Настройки"')
         auto_registration(message=message, event_status=1)
-        get_keyboard_user(message)
+        get_main_menu(message)
     else:
         bot.send_message(message.chat.id, f'Успешно!\nПодписаться на рассылку можно в меню в разделе "Настройки"')
         auto_registration(message=message, event_status=0)
         time.sleep(1)
-        get_keyboard_user(message)
+        get_main_menu(message)
 
 
 # Обработка сообщений
@@ -197,7 +197,7 @@ def admin_menu(message):
     time.sleep(1.5)
 
     if rows[6] == 1 or rows[6] == 2:
-        get_keyboard_admin(message)
+        get_main_menu(message)
     else:
         bot.send_message(message.chat.id, f'В доступе отказано.')
         error(message=message)
@@ -225,9 +225,9 @@ def submenu(message):
 
     if message.text == 'Назад':
         if rows[6] in (1, 2):
-            get_keyboard_admin(message)
+            get_main_menu(message)
         else:
-            get_keyboard_user(message)
+            get_main_menu(message)
 
 
 # Все песенники
@@ -254,7 +254,7 @@ def send_file_by_title(message):
 # Вывод основного меню
 @bot.message_handler(func=lambda message: message.text == 'Меню' or message.text == 'меню')
 def main_menu(message):
-    get_keyboard_user(message)
+    get_main_menu(message)
 
 
 # Подменю "Администраторы"
@@ -299,20 +299,17 @@ def appoint_as_administrator_end(message):
             db_update_user(id_user=id_user, status=2)
             bot.send_message(message.chat.id, f'Назначаю пользователя {rows[3]} администратором.')
             time.sleep(1)
-            bot.send_message(message.chat.id, f'Права повышены!')
             try:
                 garold = open('img\garold.jpg', 'rb')
                 bot.send_photo(rows[0], garold)
                 garold.close()
             except:
                 bot.send_message(message.chat.id, f'Возникла ошибка из-за которой вы не получите мем :(')
-            bot.send_message(
-                f'{rows[0]}. Поздравляем {rows[3]}, вы назначены администратором! Введите Админ меню, чтобы открыть меню администратора.')
+            bot.send_message(rows[0], f'{rows[0]}. Поздравляем {rows[3]}, вы назначены администратором! Введите "Меню", чтобы открыть меню администратора.')
         else:
             bot.send_message(message.chat.id, f'Данный пользователь уже администратор.')
     except:
-        bot.send_message(message.chat.id,
-                         f'Возникла ошибка. Возможно такого пользователя не существует или вы ввели неверный ID.\nПопробуйте ещё раз.')
+        bot.send_message(message.chat.id, f'Возникла ошибка. Возможно такого пользователя не существует или вы ввели неверный ID.\nПопробуйте ещё раз.')
         time.sleep(1)
         appoint_as_administrator_start(message)
 
@@ -346,9 +343,8 @@ def downgrad_as_administrator_end(message):
                 cotik_sad.close()
             except:
                 bot.send_message(message.chat.id, f'Возникла ошибка из-за которой вы не получите фото котика :(')
-            bot.send_message(rows[0],
-                             f'Уважаемый/ая {rows[3]}, у вас забрали права администратора! Вы можете обратиться к разработчику для выяснения причин.')
-            get_administrator_call(message)
+            bot.send_message(rows[0], f'Уважаемый/ая {rows[3]}, у вас забрали права администратора! Вы можете обратиться к разработчику для выяснения причин.')
+            get_administrator_call(message, chat_id=rows[0])
         else:
             bot.send_message(message.chat.id, f'Данный пользователь не администратор.')
 
@@ -366,7 +362,7 @@ def show_all_administrators(message):
 
     try:
         for i in db_select_all_admin():
-            admin_list.append(f'i[3] {i[7].lower()}\nID: {str(i[0])}\n\n')
+            admin_list.append(f'{i[3]} {i[7].lower()}\nID: {str(i[0])}\n\n')
             admin_list.sort()
 
         bot.send_message(message.chat.id, f'Администраторы:\n\n {("".join(admin_list))}')
@@ -379,12 +375,12 @@ def show_all_administrators(message):
 def user_newsletter_edit(message):
     if message.text == 'Подключить рассылку 🔔':
         db_update_user_newsletter(id_user=message.from_user.id, status=1)
-        get_keyboard_setting_submenu(message, text='Обновляю данные')
+        get_keyboard_setting_submenu(message)
         time.sleep(1)
         bot.send_message(message.chat.id, f'Рассылка подключена!')
     else:
         db_update_user_newsletter(id_user=message.from_user.id, status=0)
-        get_keyboard_setting_submenu(message, text='Обновляю данные')
+        get_keyboard_setting_submenu(message)
         time.sleep(1)
         bot.send_message(message.chat.id, f'Рассылка отключена!')
 
@@ -424,16 +420,16 @@ def forward_message_start(message):
     else:
         error(message=message)
 
-
+# TODO выдаёт почему то "Возникла ошибка" хотя сообщения рассылает
 def forward_message_end(message):
     rows = db_select_user_by_id(id_user=message.from_user.id)
     users = db_select_user_by_newsletter()
 
     if message.text == 'Отмена':
         if rows[6] == 1 or rows[6] == 2:
-            get_keyboard_admin(message)
+            get_main_menu(message)
         else:
-            get_keyboard_user(message)
+            get_main_menu(message)
     else:
         bot.send_message(message.chat.id, f'Пробую разослать сообщение пользователям...')
         try:
@@ -442,7 +438,7 @@ def forward_message_end(message):
             bot.send_message(message.chat.id, f'Сообщение успешно разослано.')
         except:
             bot.send_message(message.chat.id, f'Возникла ошибка')
-
+    get_main_menu(message=message)
 
 # Оставить отзыв
 @bot.message_handler(func=lambda message: message.text == 'Оставить отзыв 💬')
@@ -461,8 +457,7 @@ def review_save(message):
         else:
             id_user = message.from_user.id
             user_text = message.text
-            db_insert_review(id_user=id_user, text_review=user_text, looked_status=0, date=date.today(),
-                             message=message)
+            db_insert_review(id_user=id_user, text_review=user_text, looked_status=0, date=date.today())
             bot.send_message(message.chat.id, f'Спасибо за ваш отзыв!')
     else:
         sent = bot.send_message(message.chat.id, f'Я принимаю только текст!)')
@@ -689,7 +684,7 @@ def date_event(message):
     rows = [x[0] for x in db_select_event_types()]
 
     if message.text == 'Назад':
-        get_keyboard_admin(message)
+        get_main_menu(message)
 
     elif message.text in rows:
         type_event = message.text
@@ -704,13 +699,13 @@ def date_event(message):
 
 def date_event_technical(message, type_event):
     if message.text == 'Назад':
-        get_keyboard_admin(message)
+        get_main_menu(message)
 
     elif message.content_type == 'text':
         date_event = message.text
         date_event = date_event.title()
 
-        result = re.match(r'(\b[1-9]\b (Января|Февраля|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декарбря)|(\b[12][0-9]\b (Января|Февраля|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декарбря))|\b3[01]\b (Января|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декарбря))', date_event)
+        result = re.match(r'(\b[1-9]\b (Января|Февраля|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декабря)|(\b[12][0-9]\b (Января|Февраля|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декабря))|\b3[01]\b (Января|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декабря))', date_event)
 
         if result == None:
             sent = bot.send_message(message.chat.id, f'Вы ввели некорректную дату.\n Попробуйте ещё раз.')
@@ -730,7 +725,7 @@ def date_event_technical(message, type_event):
 
 def text_event(message, type_event, date_event):
     if message.text == 'Назад':
-        get_keyboard_admin(message)
+        get_main_menu(message)
 
     elif message.content_type == 'text':
         date_technical = message.text
@@ -759,7 +754,7 @@ def event_preview(message, type_event, date_event, date_event_technical):
         if mat_check(message=message, type_event='Создании события'):
             bot.send_message(message.chat.id, f'В вашем тексте обнаружен мат!\nДобро пожаловать в бан!')
             bot.send_message(message.chat.id, f'Напишите администратору для разблокировки')
-            get_administrator_call(message)
+            get_administrator_call(message, message.chat.id)
             list_banned_users.append(str(message.from_user.id))
         else:
             bot.send_message(message.chat.id, f'Предпросмотр события: ')
@@ -767,7 +762,7 @@ def event_preview(message, type_event, date_event, date_event_technical):
             bot.send_message(message.chat.id,
                              f'Тип события: {type_event}\nДата события: {date_event}\nТекст события:\n{text_event}\nТехническая дата: {date_event_technical}')
             time.sleep(1)
-            sent = bot.send_message(message.chat.id, f'Сохранить событие?', reply_markup=get_keyboard_yes_no(message))
+            sent = bot.send_message(message.chat.id, f'Сохранить событие?', reply_markup=get_keyboard_yes_no())
             bot.register_next_step_handler(sent, save_event, type_event, date_event, text_event, date_event_technical)
 
     else:
@@ -785,11 +780,11 @@ def save_event(message, type_event, date_event, text_event, date_event_technical
         db_insert_event(dtype_event=type_event, ddate_event=date_event, ddate_event_techical=date_event_technical,
                         dtext_event=text_event)
         sent = bot.send_message(message.chat.id, f'Разослать событие пользователям?',
-                                reply_markup=get_keyboard_yes_no(message))
+                                reply_markup=get_keyboard_yes_no())
         bot.register_next_step_handler(sent, event_newsletter, type_event)
 
     elif message.text == 'Нет':
-        sent = bot.send_message(message.chat.id, f'Создать заново?', reply_markup=get_keyboard_yes_no(message))
+        sent = bot.send_message(message.chat.id, f'Создать заново?', reply_markup=get_keyboard_yes_no())
         bot.register_next_step_handler(sent, event_hub)
 
     else:
@@ -801,7 +796,7 @@ def event_hub(message):
     if message.text == 'Да':
         event_create_start(message)
     else:
-        get_keyboard_admin(message)
+        get_main_menu(message)
 
 
 def event_newsletter(message, type_event):
@@ -811,16 +806,16 @@ def event_newsletter(message, type_event):
             bot.send_message(i[0], f'Опубликовано новое событие от гитаристов.')
             time.sleep(1)
             bot.send_message(i[0], f'{event[2]} состоится {event[6].lower()}!\n{event[1]}')
-        get_keyboard_admin(message)
+        get_main_menu(message)
 
     elif message.text == 'Нет':
-        get_keyboard_admin(message)
+        get_main_menu(message)
 
     else:
         sent = bot.send_message(message.chat.id, f'Я вас непонимаю. Введите "Да" или "Нет"')
         bot.register_next_step_handler(sent, event_newsletter, type_event)
 
-
+# TODO Некорректно выводит события. Актуальные не выводит. Проверить запрос
 # Вывод ближайших событий
 @bot.message_handler(func=lambda message: message.text == 'Показать ближайшие события')
 def event_show(message):
@@ -839,7 +834,6 @@ def event_show(message):
     if key == False:
         bot.send_message(message.chat.id, f'Новых событий пока нет')
 
-
 # Бан лист
 @bot.message_handler(func=lambda message: message.text == 'Бан лист')
 def ban_list_show(message):
@@ -852,25 +846,24 @@ def ban_list_show(message):
             for i in list_banned_users:
                 btn = types.InlineKeyboardButton(i, callback_data=i)
                 keyboard.add(btn)
+
             bot.send_message(message.chat.id, f'Бан лист:', reply_markup=keyboard)
         else:
             bot.send_message(message.chat.id, f'Бан лист пуст')
 
 
 # Удаление пользователя из бан листа
-@bot.callback_query_handler(func=lambda call: call.data in list_banned_users or call.data == 'Yes' or call.data == 'No')
+@bot.callback_query_handler(func=lambda call: call.data in str(list_banned_users) or call.data == 'Yes' or call.data == 'No')
 def ban_list_delete_start(call):
-    if call.data in list_banned_users:
-        user_ban_remove.id_user = call.data
+    if call.data in str(list_banned_users):
+        user_ban_remove.id_user = int(call.data)
         keyboard = types.InlineKeyboardMarkup()
         btn_no = types.InlineKeyboardButton('Нет', callback_data='No')
         btn_yes = types.InlineKeyboardButton('Да', callback_data='Yes')
-        btn_delete = types.InlineKeyboardButton('Удалить из бана?')
+        btn_delete = types.InlineKeyboardButton('Удалить из бана?', callback_data='0')
         keyboard.add(btn_delete)
         keyboard.row(btn_no, btn_yes)
-        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                      reply_markup=keyboard)
-
+        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=keyboard)
     try:
         if call.data == 'Yes':
             list_banned_users.remove(user_ban_remove.id_user)
@@ -947,7 +940,7 @@ def Masha(message):
         bot.send_photo(message.chat.id, i)
 
     time.sleep(1)
-    sent = bot.send_message(message.chat.id, f'Ещё?', reply_markup=get_keyboard_yes_no(message))
+    sent = bot.send_message(message.chat.id, f'Ещё?', reply_markup=get_keyboard_yes_no())
     bot.register_next_step_handler(sent, Masha_hub)
 
 
@@ -955,7 +948,7 @@ def Masha_hub(message):
     if message.text == 'Да':
         Masha(message=message)
     else:
-        get_keyboard_user(message=message)
+        get_main_menu(message=message)
 
 
 # Помощь

@@ -89,6 +89,24 @@ def get_keyboard_user(message):
     keyboard.add(btn_song_list, btn_push_reviews, btn_events, btn_settings)
     bot.send_message(message.chat.id, "Открываю меню", reply_markup = keyboard)
 
+def get_main_menu(message):
+    rows = db_select_user_by_id(id_user=message.from_user.id)
+    
+    keyboard = types.ReplyKeyboardMarkup(row_width = 3, resize_keyboard=True)
+    btn_song_list = types.KeyboardButton(text="Список песен 📔")
+    btn_reviews = types.KeyboardButton(text="Отзывы 💬")
+    btn_events = types.KeyboardButton(text="События 📅")
+    btn_resend_message = types.KeyboardButton(text="Переслать сообщение ✉️")
+    btn_requests = types.KeyboardButton(text="Вывести запросы 📈")
+    btn_settings = types.KeyboardButton(text="Настройки ⚙️")
+
+    if rows[6] in (1,2):
+        keyboard.add(btn_song_list, btn_reviews, btn_events, btn_resend_message, btn_requests, btn_settings)
+        bot.send_message(message.chat.id, "Открываю меню", reply_markup=keyboard)
+    else:
+        keyboard.add(btn_song_list, btn_reviews, btn_events, btn_settings)
+        bot.send_message(message.chat.id, "Открываю меню", reply_markup=keyboard)
+
 
 def get_keyboard_yes_no():
 
@@ -120,19 +138,21 @@ def get_keyboard_setting_submenu(message):
     btn_show_data = types.KeyboardButton(text="Показать мои данные 👤")
     btn_song_books = types.KeyboardButton(text="Песенники 📔")
     btn_help = types.KeyboardButton(text="Помощь ❓")
+    btn_ban_list = types.KeyboardButton(text="Бан лист")
+    btn_admin = types.KeyboardButton(text="Администраторы 💼")
     btn_back = types.KeyboardButton(text="Назад")
+
     if rows[4] == 0 and rows != NoneType:
         btn_newsletter = types.KeyboardButton(text="Подключить рассылку 🔔")
     else:
         btn_newsletter = types.KeyboardButton(text="Отключить рассылку 🔕")
+
     if rows[6] == 1:
-        btn_ban_list = types.KeyboardButton(text="Бан лист")
-        btn_admin = types.KeyboardButton(text="Администраторы 💼")
         keyboard.add(btn_show_data, btn_newsletter, btn_admin, btn_song_books, btn_help, btn_ban_list, btn_back)
-        bot.send_message(message.chat.id, 'Открываю', reply_markup = keyboard)
+        bot.send_message(message.chat.id, 'Обновляю данные', reply_markup = keyboard)
     else:
         keyboard.add(btn_show_data, btn_newsletter, btn_song_books, btn_help, btn_back)
-        bot.send_message(message.chat.id, 'Открываю', reply_markup = keyboard)
+        bot.send_message(message.chat.id, 'Обновляю данные', reply_markup = keyboard)
 
 
 def get_keyboard_event_submenu(message):
@@ -148,8 +168,9 @@ def get_keyboard_event_submenu(message):
     keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard=True)
     btn_event_all = types.KeyboardButton(text="Показать ближайшие события")
     btn_back = types.KeyboardButton(text="Назад")
+    btn_create_event = types.KeyboardButton(text="Создать событие")
+
     if rows[6] in (1,2):
-        btn_create_event = types.KeyboardButton(text="Создать событие")
         keyboard.add(btn_event_all, btn_create_event, btn_back)
         bot.send_message(message.chat.id, "Открываю", reply_markup = keyboard)
     else:
@@ -167,18 +188,18 @@ def get_keyboard_review_submenu(message):
     """
 
     rows = db_select_user_by_id(id_user = message.from_user.id)
+    btn_pull_rewievs = types.KeyboardButton(text="Оставить отзыв 💬")
+    btn_rewievs_all = types.KeyboardButton(text="Показать отзывы")
+    btn_back = types.KeyboardButton(text="Назад")
 
     if rows[6] == 1 or rows[6] == 2:
-        rows = db_select_user_by_id(id_user = message.from_user.id)
         keyboard = types.ReplyKeyboardMarkup(row_width = 2, resize_keyboard = True)
-        btn_rewievs_all = types.KeyboardButton(text="Показать отзывы")
-        btn_pull_rewievs = types.KeyboardButton(text="Оставить отзыв 💬")
-        btn_back = types.KeyboardButton(text="Назад")
         keyboard.add(btn_rewievs_all, btn_pull_rewievs, btn_back)
         bot.send_message(message.chat.id, "Открываю", reply_markup = keyboard)
     else:
-        error(message = message)
-
+        keyboard = types.ReplyKeyboardMarkup(row_width = 1, resize_keyboard = True)
+        keyboard.add(btn_pull_rewievs, btn_back)
+        bot.send_message(message.chat.id, "Открываю", reply_markup = keyboard)
 
 def get_keyboard_admin_edit_submenu(message):
 
@@ -200,10 +221,10 @@ def get_keyboard_admin_edit_submenu(message):
         keyboard.add(btn_set_admin, btn_delete_admin, btn_admin_all, btn_back)
         bot.send_message(message.chat.id, "Открываю", reply_markup = keyboard)
     else:
-        error(message = message)
+        error(message=message)
 
 
-def get_administrator_call(message):
+def get_administrator_call(message, chat_id):
 
     """
     Вызов кнопки-ссылки на администратора
@@ -215,7 +236,7 @@ def get_administrator_call(message):
     keyboard = types.InlineKeyboardMarkup()
     btn_admin = types.InlineKeyboardButton("Администратор", url='https://t.me/Danila877')
     keyboard.add(btn_admin)
-    bot.send_message(message.chat.id, "👇", reply_markup = keyboard)
+    bot.send_message(chat_id, "👇", reply_markup = keyboard)
 
 
 # ФУНКЦИИ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ
@@ -669,10 +690,10 @@ def error(message):
         bot.send_photo(message.chat.id, cotik)
         time.sleep(0.5)
         bot.send_message(message.chat.id, "Что-то пошло не так.\nО данной ошибке можете написать в отзывах или написать самому разработчику по ссылке ниже !)")
-        get_administrator_call(message)
+        get_administrator_call(message, message.chat.id)
     except:
         bot.send_message(message.chat.id, "Возникла неожиданная ошибка.\nОбратитесь к администратору.")
-        get_administrator_call(message)
+        get_administrator_call(message, message.chat.id)
         bot.send_photo(message.chat.id, cotik)
 
 
@@ -833,7 +854,7 @@ def audio_to_text(dest_name: str, message):
     except:
         bot.send_message(message.chat.id, 'Возникла ошибка.\nПопробуйте ещё раз.')
 
-
+# TODO Подумать над более продуманным фильтром
 def mat_check(message, type_event:str = 'None'):
 
     """
@@ -851,7 +872,8 @@ def mat_check(message, type_event:str = 'None'):
         row = db_select_user_by_id(id_user=message.from_user.id)
         words = message.text.split(' ')
         for i in words:
-            result = re.match(r'\b((у|[нз]а|(хитро|не)?вз?[ыьъ]|с[ьъ]|(и|ра)[зс]ъ?|(о[тб]|под)[ьъ]?|(.\B)+?[оаеи])?-?([её]б(?!о[рй])|и[пб][ае][тц]).*?|(н[иеа]|([дп]|верт)о|ра[зс]|з?а|с(ме)?|о(т|дно)?|апч)?-?ху([яйиеёю]|ли(?!ган)).*?|(в[зы]|(три|два|четыре)жды|(н|сук)а)?-?бл(я(?!(х|ш[кн]|мб)[ауеыио]).*?|[еэ][дт]ь?)|(ра[сз]|[зн]а|[со]|вы?|п(ере|р[оие]|од)|и[зс]ъ?|[ао]т)?п[иеё]зд.*?|(за)?п[ие]д[аое]?р([оа]м|(ас)?(ну.*?|и(ли)?[нщктл]ь?)?|(о(ч[еи])?|ас)?к(ой)|юг)[ауеы]?|манд([ауеыи](л(и[сзщ])?[ауеиы])?|ой|[ао]вошь?(е?к[ауе])?|юк(ов|[ауи])?)|муд([яаио].*?|е?н([ьюия]|ей))|мля([тд]ь)?|лять|([нз]а|по)х|м[ао]л[ао]фь([яию]|[еёо]й))\b', message.text)
+            text = i.lower()
+            result = re.match(r'\b((у|[нз]а|(хитро|не)?вз?[ыьъ]|с[ьъ]|(и|ра)[зс]ъ?|(о[тб]|под)[ьъ]?|(.\B)+?[оаеи])?-?([её]б(?!о[рй])|и[пб][ае][тц]).*?|(н[иеа]|([дп]|верт)о|ра[зс]|з?а|с(ме)?|о(т|дно)?|апч)?-?ху([яйиеёю]|ли(?!ган)).*?|(в[зы]|(три|два|четыре)жды|(н|сук)а)?-?бл(я(?!(х|ш[кн]|мб)[ауеыио]).*?|[еэ][дт]ь?)|(ра[сз]|[зн]а|[со]|вы?|п(ере|р[оие]|од)|и[зс]ъ?|[ао]т)?п[иеё]зд.*?|(за)?п[ие]д[аое]?р([оа]м|(ас)?(ну.*?|и(ли)?[нщктл]ь?)?|(о(ч[еи])?|ас)?к(ой)|юг)[ауеы]?|манд([ауеыи](л(и[сзщ])?[ауеиы])?|ой|[ао]вошь?(е?к[ауе])?|юк(ов|[ауи])?)|муд([яаио].*?|е?н([ьюия]|ей))|мля([тд]ь)?|лять|([нз]а|по)х|м[ао]л[ао]фь([яию]|[еёо]й))\b', text)
             #result = re.match(r'(\s+|^)[пПnрРp]?[3ЗзВBвПnпрРpPАaAаОoO0о]?[сСcCиИuUОoO0оАaAаыЫуУyтТT]?[Ппn][иИuUeEеЕ][зЗ3][ДдDd]\w*[\?\,\.\;\-]*|(\s+|^)[рРpPпПn]?[рРpPоОoO0аАaAзЗ3]?[оОoO0иИuUаАaAcCсСзЗ3тТTуУy]?[XxХх][уУy][йЙеЕeEeяЯ9юЮ]\w*[\?\,\.\;\-]*|(\s+|^)[бпПnБ6][лЛ][яЯ9]([дтДТDT]\w*)?[\?\,\.\;\-]*|(\s+|^)(([зЗоОoO03]?[аАaAтТT]?[ъЪ]?)|(\w+[оОOo0еЕeE]))?[еЕeEиИuUёЁ][бБ6пП]([аАaAиИuUуУy]\w*)?[\?\,\.\;\-]*', i)
             if result != None:
                 with open(logfile_mat, 'a', encoding='utf-8') as logm:
