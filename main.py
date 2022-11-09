@@ -270,9 +270,13 @@ def review_submenu(message):
 # Назначение администратора
 @bot.message_handler(func=lambda message: message.text == 'Назначить администратором')
 def appoint_as_administrator_start(message):
-    sent = bot.send_message(message.chat.id, f'Введите Id пользователя, которого вы хотите назначить администратором')
-    bot.register_next_step_handler(sent, appoint_as_administrator_end)
+    rows = db_select_user_by_id(message.from_user.id)
 
+    if rows[6] == 1:
+        sent = bot.send_message(message.chat.id, f'Введите Id пользователя, которого вы хотите назначить администратором')
+        bot.register_next_step_handler(sent, appoint_as_administrator_end)
+    else:
+        error(message)
 
 def appoint_as_administrator_end(message):
     id_user = message.text
@@ -303,9 +307,13 @@ def appoint_as_administrator_end(message):
 # Понижение администратора
 @bot.message_handler(func=lambda message: message.text == 'Убрать администратора')
 def downgrad_as_administrator_start(message):
-    sent = bot.send_message(message.chat.id, f'Введите Id пользователя, которого хотите убрать с поста администратора')
-    bot.register_next_step_handler(sent, downgrad_as_administrator_end)
+    rows = db_select_user_by_id(message.from_user.id)
 
+    if rows[6] == 1:
+        sent = bot.send_message(message.chat.id, f'Введите Id пользователя, которого хотите убрать с поста администратора')
+        bot.register_next_step_handler(sent, downgrad_as_administrator_end)
+    else:
+        error(message)
 
 def downgrad_as_administrator_end(message):
     keyboard = types.InlineKeyboardMarkup()
@@ -345,16 +353,18 @@ def downgrad_as_administrator_end(message):
 @bot.message_handler(func=lambda message: message.text == 'Показать всех администраторов')
 def show_all_administrators(message):
     admin_list = []
+    rows = db_select_user_by_id(message.from_user.id)
 
-    try:
-        for i in db_select_all_admin():
-            admin_list.append(f'{i[3]} {i[7].lower()}\nID: {str(i[0])}\n\n')
-            admin_list.sort()
-
-        bot.send_message(message.chat.id, f'Администраторы:\n\n {("".join(admin_list))}')
-    except:
-        bot.send_message(message.chat.id, f'Администраторов нет.')
-
+    if rows[6] == 1:
+        if db_select_all_admin():
+            for i in db_select_all_admin():
+                admin_list.append(f'{i[3]} {i[7].lower()}\nID: {str(i[0])}\n\n')
+                admin_list.sort()
+            bot.send_message(message.chat.id, f'Администраторы:\n\n {("".join(admin_list))}')
+        else:
+            bot.send_message(message.chat.id, f'Администраторов нет')
+    else:
+        error(message)
 
 # Подключение и отключение рассылки
 @bot.message_handler(func=lambda message: message.text == 'Подключить рассылку 🔔' or message.text == 'Отключить рассылку 🔕')
