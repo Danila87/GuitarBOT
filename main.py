@@ -686,7 +686,7 @@ def date_event(message):
         event_create_start(message)
 
 
-def date_event_technical(message, type_event):
+def date_event_technical(message, type_event:str):
     if message.text == 'Назад':
         get_main_menu(message)
 
@@ -712,7 +712,7 @@ def date_event_technical(message, type_event):
         bot.send_message(message.chat.id, f'Введите дату декоративную.\nНапример "6 апреля"')
 
 
-def text_event(message, type_event, date_event):
+def text_event(message, type_event:str, date_event:str):
     if message.text == 'Назад':
         get_main_menu(message)
 
@@ -735,7 +735,7 @@ def text_event(message, type_event, date_event):
         bot.send_message(message.chat.id, f'Введите техническую дату в формате "2022-01-01" после которой мероприятие будет не актуально.')
 
 
-def event_preview(message, type_event, date_event, date_event_technical):
+def event_preview(message, type_event:str, date_event:str, date_event_technical:str):
     text_event = message.text
 
     if message.content_type == 'text':
@@ -761,7 +761,7 @@ def event_preview(message, type_event, date_event, date_event_technical):
         bot.send_message(message.chat.id, f'Введите текст события')
 
 
-def save_event(message, type_event, date_event, text_event, date_event_technical):
+def save_event(message, type_event:str, date_event:str, text_event:str, date_event_technical:str):
     if message.text == 'Да':
         bot.send_message(message.chat.id, f'Событие сохранено.')
         time.sleep(1)
@@ -788,7 +788,7 @@ def event_hub(message):
         get_main_menu(message)
 
 
-def event_newsletter(message, type_event):
+def event_newsletter(message, type_event:str):
     if message.text == 'Да':
         event = db_select_latest_event(type_event=type_event)
         for i in db_select_user_by_newsletter():

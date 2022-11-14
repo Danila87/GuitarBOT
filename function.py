@@ -39,6 +39,7 @@ import threading
         logfile_mat : путь к лог файлу с матами
 """
 
+
 #TOKEN = os.environ["BOT_TOKEN"]
 TOKEN = '5371019683:AAGM6VbDWxOijJqyVLfPoox7JdlCxjsMNpU'
 YANDEX_TOKEN = 'y0_AgAAAAAO_DuQAAhmIAAAAADOUpN38O9Jqe8fTx275pqgdwJIP-pbvR8'
@@ -205,7 +206,7 @@ def get_administrator_call(message, chat_id):
 # ФУНКЦИИ РАБОТЫ С ПОЛЬЗОВАТЕЛЯМИ
 
 
-def db_select_users_all():
+def db_select_users_all() -> list[tuple]:
 
     """
     SQL запрос для получения списка всех пользователей
@@ -220,7 +221,7 @@ def db_select_users_all():
     return rows
 
 
-def db_select_user_by_newsletter():
+def db_select_user_by_newsletter() -> list[tuple]:
 
     """
     SQL запрос для получения пользователей, согласных на рассылку
@@ -235,7 +236,7 @@ def db_select_user_by_newsletter():
     return rows
 
 
-def db_select_user_by_id(id_user:int):
+def db_select_user_by_id(id_user:int) -> list[tuple]:
 
     """
     SQL запрос для получения конкретного пользователя
@@ -277,7 +278,7 @@ def db_insert_user(id_user:int, first_name:str=None, last_name:str=None, nicknam
         pass
 
 
-def db_select_user_registration(id_user:int):
+def db_select_user_registration(id_user:int) -> list[tuple]:
 
     """
     SQL запрос для проверки пользователя на регистрацию
@@ -326,7 +327,7 @@ def db_update_user(id_user:int, status:int):
     conn.commit()
 
 
-def db_select_all_admin():
+def db_select_all_admin() -> list[tuple]:
 
     """
     SQL запрос для получения всех администраторов
@@ -364,7 +365,7 @@ def db_insert_review(id_user:int, text_review:str, looked_status:int, date:str):
         pass
 
 
-def db_select_reviews():
+def db_select_reviews() -> list[tuple]:
 
     """
     SQL запрос для получения всех отзывов
@@ -396,7 +397,7 @@ def db_update_review(id_review:int):
 # ВСЕ ФУНКЦИИ РАБОТЫ С ЗАПРОСАМИ
 
 
-def db_requests_count():
+def db_requests_count() -> list[tuple]:
 
     """
     SQL запрос для вывода запросов за всё время
@@ -430,7 +431,7 @@ def db_insert_request(id_user:int, requests:str, date:str):
         pass
 
 
-def db_select_requests_by_date(selected_date:str):
+def db_select_requests_by_date(selected_date:str) -> list[tuple]:
 
     """
     SQL запрос дла получения запросов за определённую дату
@@ -450,7 +451,7 @@ def db_select_requests_by_date(selected_date:str):
     return rows
 
 
-def db_select_requests_period(start_date:str, final_date:str):
+def db_select_requests_period(start_date:str, final_date:str) -> list[tuple]:
 
     """
     SQL запрос для получения запросов за определённый период
@@ -473,7 +474,7 @@ def db_select_requests_period(start_date:str, final_date:str):
 # ВСЕ ФУНКЦИИ РАБОТЫ С СОБЫТИЯМИ
 
 
-def db_select_event_types():
+def db_select_event_types() -> list[tuple]:
 
     """
     SQL запрос для получения всех типов событий
@@ -511,7 +512,7 @@ def db_insert_event(dtype_event:int, ddate_event:str, dtext_event:str, ddate_eve
         pass
 
 
-def db_select_latest_event(type_event: str):
+def db_select_latest_event(type_event: str) -> list[tuple]:
 
     """
     SQL запрос для получения актуального события
@@ -532,7 +533,7 @@ def db_select_latest_event(type_event: str):
 # ВСЕ ФУНКЦИИ РАБОТЫ С ПЕСНЯМИ
 
 
-def db_select_song_all():
+def db_select_song_all() -> list[tuple]:
 
     """
     SQL запрос для получения всех песен
@@ -551,7 +552,7 @@ def db_select_song_all():
 
 
 
-def db_select_song(title_song:str):
+def db_select_song(title_song:str) -> list[tuple]:
 
     """
     SQL запрос для получения песни по её заголовку
@@ -569,7 +570,7 @@ def db_select_song(title_song:str):
     return rows
 
 
-def db_select_song_by_type(type_song:str):
+def db_select_song_by_type(type_song:str) -> list[tuple]:
 
     """
     SQL запрос для получения песен определённой категории
@@ -587,7 +588,7 @@ def db_select_song_by_type(type_song:str):
     return rows
 
 
-def db_select_song_type():
+def db_select_song_type() -> list[tuple]:
 
     """
     SQL запрос для получения всех категорий песен
@@ -599,6 +600,7 @@ def db_select_song_type():
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM Type_song ')
     rows = cursor.fetchall()
+    print(rows)
     return rows
 
 
@@ -660,7 +662,7 @@ def error(message):
         bot.send_photo(message.chat.id, cotik)
 
 
-def db_select_songbook_all():
+def db_select_songbook_all() -> list[tuple]:
 
     """
     SQL запрос для получения списка всех песенников
@@ -670,7 +672,6 @@ def db_select_songbook_all():
     """
 
     cursor = conn.cursor()
-
     cursor.execute("SELECT * FROM Song_book")
     rows = cursor.fetchall()
     return rows
@@ -694,7 +695,7 @@ def db_select_songbook_by_title(message, song_book_title:str = "Песенник
     bot.send_document(message.chat.id, file)
 
 
-def get_img_from_Masha(message):
+def get_img_from_Masha(message) -> str:
 
     """
     Функция для получения фотографии Тимоти Шаламе или Джонни Деппа для Маши. Сделал чисто по приколу
@@ -730,7 +731,7 @@ def get_img_from_Masha(message):
 
 
     # Шаламе
-    def shalame_get_link():
+    def shalame_get_link() -> list:
         
         for p in range(1,3):
 
@@ -748,7 +749,7 @@ def get_img_from_Masha(message):
 
 
     # Джонни
-    def jonny_get_link():
+    def jonny_get_link() -> list:
 
         for p in range(1,3):
 
@@ -792,7 +793,7 @@ def get_img_from_Masha(message):
         bot.send_message(message.chat.id, 'Фотографии закончились. ')
 
 
-def audio_to_text(dest_name: str, message):
+def audio_to_text(dest_name:str, message):
 
     """
     Перевод аудио в текст
@@ -818,7 +819,7 @@ def audio_to_text(dest_name: str, message):
         bot.send_message(message.chat.id, 'Возникла ошибка.\nПопробуйте ещё раз.')
 
 # TODO Подумать над более продуманным фильтром
-def mat_check(message, type_event:str = 'None'):
+def mat_check(message, type_event:str = 'None') -> bool:
 
     """
     Проверка сообщения на мат
