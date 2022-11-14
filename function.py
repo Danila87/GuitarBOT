@@ -359,7 +359,7 @@ def db_insert_review(id_user:int, text_review:str, looked_status:int, date:str):
 
     try:
         cursor = conn.cursor()
-        cursor.execute('INSERT INTO Reviews (id_user, text_review, lookeed_status, date) VALUES (?, ?, ?, ?)', (id_user, text_review, looked_status, date))
+        cursor.execute('INSERT INTO Reviews (Id_user, Text_review, Lookeed_status, Date_review) VALUES (?, ?, ?, ?)', (id_user, text_review, looked_status, date))
         conn.commit()
     except:
         pass
@@ -375,7 +375,7 @@ def db_select_reviews() -> list[tuple]:
     """
 
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM Reviews LEFT OUTER JOIN Users ON Reviews.id_user = Users.id_user WHERE date > date('now', '-7 days')")
+    cursor.execute("SELECT * FROM Reviews LEFT OUTER JOIN Users ON Reviews.Id_user = Users.id_user WHERE Date_review > date('now', '-7 days')")
     rows = cursor.fetchall()
     return rows
 
@@ -390,7 +390,7 @@ def db_update_review(id_review:int):
     """
 
     cursor = conn.cursor()
-    cursor.execute('UPDATE Reviews SET lookeed_status = 1 WHERE id_review = ?',(id_review,))
+    cursor.execute('UPDATE Reviews SET Lookeed_status = 1 WHERE Id_review = ?',(id_review,))
     conn.commit()
 
 
@@ -407,7 +407,7 @@ def db_requests_count() -> list[tuple]:
     """
 
     cursor = conn.cursor()
-    cursor.execute('SELECT requests, COUNT (*) AS Count FROM Requests GROUP BY requests ORDER BY Count DESC')
+    cursor.execute('SELECT Request, COUNT (*) AS Count FROM Requests GROUP BY Request ORDER BY Count DESC')
     rows = cursor.fetchall()
     return rows
 
@@ -425,7 +425,7 @@ def db_insert_request(id_user:int, requests:str, date:str):
 
     try:
         cursor = conn.cursor()
-        cursor.execute('INSERT INTO Requests (id_user, requests, date) VALUES (?, ?, ?)', (id_user, requests, date))
+        cursor.execute('INSERT INTO Requests (Id_user, Request, Date) VALUES (?, ?, ?)', (id_user, requests, date))
         conn.commit()
     except:
         pass
@@ -445,7 +445,7 @@ def db_select_requests_by_date(selected_date:str) -> list[tuple]:
     """
 
     cursor = conn.cursor()
-    query = 'SELECT requests, COUNT (*) AS Count FROM Requests WHERE date LIKE ' + selected_date + ' GROUP BY requests ORDER BY Count DESC'
+    query = 'SELECT requests, COUNT (*) AS Count FROM Requests WHERE Date LIKE ' + selected_date + ' GROUP BY Request ORDER BY Count DESC'
     cursor.execute(query)
     rows = cursor.fetchall()
     return rows
@@ -465,7 +465,7 @@ def db_select_requests_period(start_date:str, final_date:str) -> list[tuple]:
     """
 
     cursor = conn.cursor()
-    query = "SELECT requests, COUNT (*) AS Count FROM Requests WHERE date BETWEEN " + start_date + " AND " + final_date + " GROUP BY requests ORDER BY Count DESC"
+    query = "SELECT requests, COUNT (*) AS Count FROM Request WHERE Date BETWEEN " + start_date + " AND " + final_date + " GROUP BY Request ORDER BY Count DESC"
     cursor.execute(query)
     rows = cursor.fetchall()
     return rows
@@ -544,7 +544,7 @@ def db_select_song_all() -> list[tuple]:
 
     cursor = conn.cursor()
     try:
-        cursor.execute('SELECT * FROM songs')
+        cursor.execute('SELECT * FROM Songs')
         rows = cursor.fetchall()
         return rows
     except:
@@ -565,7 +565,7 @@ def db_select_song(title_song:str) -> list[tuple]:
     """
 
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM songs WHERE Title_song = ?',(title_song,))
+    cursor.execute('SELECT * FROM Songs WHERE Title_song = ?',(title_song,))
     rows = cursor.fetchone()
     return rows
 
@@ -583,7 +583,7 @@ def db_select_song_by_type(type_song:str) -> list[tuple]:
     """
 
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM Songs LEFT OUTER JOIN Type_song ON Songs.Type_song = Type_song.id_type WHERE Type_song.Type_song = ?', (type_song,))
+    cursor.execute('SELECT * FROM Songs LEFT OUTER JOIN Type_song ON Songs.Type_song = Type_song.Id_type WHERE Type_song.Type_song = ?', (type_song,))
     rows = cursor.fetchall()
     return rows
 
@@ -688,7 +688,7 @@ def db_select_songbook_by_title(message, song_book_title:str = "Песенник
     """
 
     cursor = conn.cursor()
-    cursor.execute("SELECT file_path FROM Song_book WHERE title_book = ?", (song_book_title,))
+    cursor.execute("SELECT file_path FROM Song_book WHERE Title_book = ?", (song_book_title,))
     rows = cursor.fetchone()
     file = open (rows[0], 'rb')
     bot.send_message(message.chat.id, "Загружаю...")

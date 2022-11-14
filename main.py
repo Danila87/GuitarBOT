@@ -473,7 +473,7 @@ def review_show(message):
                 db_update_review(id_review=i[0])
             elif i[3] == 1:
                 status = 'Просмотрено'
-            review_list.append(f'{str(count)}.{status}\nПользователь {str(i[6])} {str(i[7])} оставил следующий отзыв:\n_{str(i[2])}_\n\n*дата: {str(i[4])}*\n\n')
+            review_list.append(f'{str(count)}.{status}\nПользователь {str(i[6])} {str(i[7])} оставил следующий отзыв:\n_{str(i[2])}_\n\n*{str(i[4])}*\n\n')
         bot.send_message(message.chat.id, (''.join(review_list)), parse_mode='Markdown')
     else:
         bot.send_message(message.chat.id, f'Отзывов нет')
