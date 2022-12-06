@@ -113,10 +113,10 @@ def get_keyboard_setting_submenu(message):
 
     if rows[6] == 1:
         keyboard.add(btn_show_data, btn_newsletter, btn_admin, btn_song_books, btn_help, btn_ban_list, btn_back)
-        bot.send_message(message.chat.id, 'Обновляю данные', reply_markup = keyboard)
+        bot.send_message(message.chat.id, 'Открываю меню', reply_markup = keyboard)
     else:
         keyboard.add(btn_show_data, btn_newsletter, btn_song_books, btn_help, btn_back)
-        bot.send_message(message.chat.id, 'Обновляю данные', reply_markup = keyboard)
+        bot.send_message(message.chat.id, 'Открываю меню', reply_markup = keyboard)
 
 
 def get_keyboard_event_submenu(message):
@@ -445,7 +445,7 @@ def db_select_requests_by_date(selected_date:str) -> list[tuple]:
     """
 
     cursor = conn.cursor()
-    query = 'SELECT requests, COUNT (*) AS Count FROM Requests WHERE Date LIKE ' + selected_date + ' GROUP BY Request ORDER BY Count DESC'
+    query = 'SELECT Request, COUNT (*) AS Count FROM Requests WHERE Date LIKE ' + selected_date + ' GROUP BY Request ORDER BY Count DESC'
     cursor.execute(query)
     rows = cursor.fetchall()
     return rows
@@ -583,10 +583,26 @@ def db_select_song_by_type(type_song:str) -> list[tuple]:
     """
 
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM Songs LEFT OUTER JOIN Type_song ON Songs.Type_song = Type_song.Id_type WHERE Type_song.Type_song = ?', (type_song,))
+    cursor.execute('SELECT * FROM Songs LEFT OUTER JOIN Type_song ON Songs.Type_song = Type_song.Id_type WHERE Type_song.Type_song = ? ORDER BY Title_song', (type_song,))
     rows = cursor.fetchall()
     return rows
 
+def db_select_song_by_type_2(type_song:str ='Действующие песни', a:str = '0') -> list[tuple]:
+
+    """
+    SQL запрос для получения песен определённой категории
+
+    Args:
+        type_song (str): Категория, по которой нужно отобрать песни
+
+    Returns:
+        rows: Возвращает список кортежей 
+    """
+
+    cursor = conn.cursor()
+    cursor.execute('SELECT Title_song FROM Songs LEFT OUTER JOIN Type_song ON Songs.Type_song = Type_song.Id_type WHERE Type_song.Type_song = ? ORDER BY Title_song LIMIT ?, 10', (type_song, a))
+    rows = cursor.fetchall()
+    return rows
 
 def db_select_song_type() -> list[tuple]:
 
@@ -600,7 +616,6 @@ def db_select_song_type() -> list[tuple]:
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM Type_song ')
     rows = cursor.fetchall()
-    print(rows)
     return rows
 
 
@@ -868,3 +883,21 @@ def auto_registration(message, event_status:int = 0):
         last_name = message.from_user.last_name
         nickname = message.from_user.username
         db_insert_user(id_user=id_user, first_name=first_name, last_name=last_name, nickname=nickname, event_status=event_status)
+
+def song_all_by_category(call, song_c):
+
+    row = db_select_song_by_type_2(song_c['type_song'], str(song_c['limit']))
+    btn_back_category = types.InlineKeyboardButton('Вернуться к категориям', callback_data='back_to_category')
+    btn_back = types.InlineKeyboardButton('Назад', callback_data = 'back_page')
+    btn_page = types.InlineKeyboardButton(f'{song_c["select_page"]} / {song_c["pages"]}', callback_data = 'back_page')
+    btn_next = types.InlineKeyboardButton('Далее', callback_data = 'next_page')
+    keyboard = types.InlineKeyboardMarkup()
+
+    for i in row:
+        btn = types.InlineKeyboardButton(i[0], callback_data=i[0])
+        keyboard.add(btn)
+
+    keyboard.add(btn_back_category)
+    keyboard.row(btn_back, btn_page, btn_next)
+
+    bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=keyboard)

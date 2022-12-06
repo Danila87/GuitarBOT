@@ -65,6 +65,7 @@ day = str(now.day)
 mut_user_values = {}
 list_banned_users = []
 
+pages = 2
 cotik_prison = open("img\cotik_prison.jpg", "wb")
 
 Months = {'Январь': '01', 'Февраль': '02', 'Март': '03', 'Апрель': '04', 'Май': '05', 'Июнь': '06', 'Июль': '07',
@@ -72,6 +73,7 @@ Months = {'Январь': '01', 'Февраль': '02', 'Март': '03', 'Ап�
 
 Type_event = {'Орлятский круг': '1', 'Песенный зачёт': '2', 'Спевка': '3', 'Квартирник': '4'}
 
+user_song_data = {}
 
 # Класс для запоминания айди пользователя (Костыль ППЦ)
 class UserBanRemove():
@@ -80,8 +82,7 @@ class UserBanRemove():
 
 user_ban_remove = UserBanRemove('0')
 
-
-# Хендлер для забаненых 
+# Хендлер для забаненых
 @bot.message_handler(func=lambda message: message.from_user.id in list_banned_users)
 def banned(message):
     bot.send_message(message.chat.id, f'Ожидайте пока бан спадет')
@@ -149,7 +150,7 @@ def user_registration_newsletter(message):
 def modify_message(bot_instance, message):
     if message.text not in ('/start', 'Да', 'Нет'):
         auto_registration(message=message, event_status=0)
-    
+
     mat_check(message=message, type_event='написании запроса')
 
     # МУТ система
@@ -170,8 +171,7 @@ def modify_message(bot_instance, message):
 
         else:  # Если пользователь есть в бан листе
 
-            if mut_user_values[message.from_user.id]['date_last'] - mut_user_values[message.from_user.id][
-                'date_first'] > 180:  # Если время прошло
+            if mut_user_values[message.from_user.id]['date_last'] - mut_user_values[message.from_user.id]['date_first'] > 180:  # Если время прошло
                 mut_user_values[message.from_user.id]['count'] = 0
                 mut_user_values[message.from_user.id]['date_first'] = int(now)
                 banned_remove(id_user=mut_user_values[message.from_user.id]['id_user'])
@@ -285,7 +285,7 @@ def appoint_as_administrator_end(message):
     try:
         bot.send_message(message.chat.id, f'Проверяю пользователя {rows[3]}')
         time.sleep(1)
-        if rows[6] == 3 or rows[6] == None:
+        if rows[6] == 3 or rows[6] is None:
             db_update_user(id_user=id_user, status=2)
             bot.send_message(message.chat.id, f'Назначаю пользователя {rows[3]} администратором.')
             time.sleep(1)
@@ -343,8 +343,7 @@ def downgrad_as_administrator_end(message):
             bot.send_message(message.chat.id, f'Данный пользователь не администратор.')
 
     except:
-        bot.send_message(message.chat.id,
-                         f'Возникла ошибка. Возможно такого пользователя не существует или вы ввели неверный ID.\nПопробуйте ещё раз.')
+        bot.send_message(message.chat.id, f'Возникла ошибка. Возможно такого пользователя не существует или вы ввели неверный ID.\nПопробуйте ещё раз.')
         time.sleep(1)
         downgrad_as_administrator_start(message)
 
@@ -411,7 +410,8 @@ def forward_message_start(message):
     else:
         error(message)
 
-# TODO выдаёт почему то "Возникла ошибка" хотя сообщения рассылает
+
+# TODO выдаёт почему-то "Возникла ошибка" хотя сообщения рассылает
 def forward_message_end(message):
     rows = db_select_user_by_id(id_user=message.from_user.id)
     users = db_select_user_by_newsletter()
@@ -556,7 +556,7 @@ def requests_select_date_show(message):
         month = message.text
         result = re.match(r'Январь\b|Февраль\b|Март\b|Апрель\b|Май\b|Июнь\b|Июль\b|Август\b|Сентябрь\b|Октябрь\b|Ноябрь\b|Декабрь\b', month)
 
-        if result != None:
+        if result is not None:
             requests_list = []
             present_month = f"'{year}-{Months[month]}-%'"
             row = len(db_select_requests_by_date(selected_date=present_month))
@@ -599,7 +599,7 @@ def date_between_start(message):
         start_date = message.text
         result = re.match(r'([12]\d\d\d)\-(0[1-9]|1[12])\-(0[1-9]|[12]\d|3[12])', start_date)
 
-        if result != None:
+        if result is not None:
             sent = bot.send_message(message.chat.id, f'Введите конечную дату в формате 2022-01-01')
             bot.register_next_step_handler(sent, date_between_end, start_date)
         else:
@@ -620,7 +620,7 @@ def date_between_end(message, start_date):
         final_date = message.text
         result = re.match(r'([12]\d\d\d)\-(0[1-9]|1[12])\-(0[1-9]|[12]\d|3[12])', start_date)
 
-        if result != None:
+        if result is not None:
             bot.send_message(message.chat.id, f'Формирую отчёт...')
             time.sleep(1)
             start_date = f"'{start_date}'"
@@ -696,7 +696,7 @@ def date_event_technical(message, type_event:str):
 
         result = re.match(r'(\b[1-9]\b (Января|Февраля|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декабря)|(\b[12][0-9]\b (Января|Февраля|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декабря))|\b3[01]\b (Января|Марта|Апреля|Мая|Июня|Июля|Августа|Сентября|Октября|Ноября|Декабря))', date_event)
 
-        if result == None:
+        if result is None:
             sent = bot.send_message(message.chat.id, f'Вы ввели некорректную дату.\n Попробуйте ещё раз.')
             bot.register_next_step_handler(sent, date_event_technical, type_event)
             time.sleep(1.5)
@@ -777,7 +777,7 @@ def save_event(message, type_event:str, date_event:str, text_event:str, date_eve
         bot.register_next_step_handler(sent, event_hub)
 
     else:
-        sent = bot.send_message(message.chat.id, f'Я вас непонимаю. Введите "Да" или "Нет"')
+        sent = bot.send_message(message.chat.id, f'Я вас не понимаю. Введите "Да" или "Нет"')
         bot.register_next_step_handler(sent, event_preview, type_event, date_event, date_event_technical)
 
 
@@ -801,7 +801,7 @@ def event_newsletter(message, type_event:str):
         get_main_menu(message)
 
     else:
-        sent = bot.send_message(message.chat.id, f'Я вас непонимаю. Введите "Да" или "Нет"')
+        sent = bot.send_message(message.chat.id, f'Я вас не понимаю. Введите "Да" или "Нет"')
         bot.register_next_step_handler(sent, event_newsletter, type_event)
 
 
@@ -820,7 +820,7 @@ def event_show(message):
             key = True
         except:
             pass
-    if key == False:
+    if not key:
         bot.send_message(message.chat.id, f'Новых событий пока нет')
 
 # Бан лист
@@ -890,27 +890,51 @@ def list_of_songs(message):
     for i in rows:
         btn = types.InlineKeyboardButton(i[1], callback_data=i[1])
         keyboard.add(btn)
-        
+
     bot.send_message(message.chat.id, f'Доступные категории', reply_markup=keyboard)
 
-
-# Обработка типов песен и вывод списка песен
+# Работа с категориями песен
 @bot.callback_query_handler(func=lambda call: call.data == 'back_to_category' or call.data in [x[1] for x in db_select_song_type()] or call.data == 'next_page' or call.data == 'back_page')
 def list_of_song_by_type1(call):
 
+    if call.message.chat.id not in user_song_data:  # Если пользователя нет в словаре значений
+        user_song_data[call.message.chat.id] = {'select_page': 1, 'type_song': 0, 'limit': 0, 'pages': 5}
+
     if call.data in [x[1] for x in db_select_song_type()]:
-        btn_back = types.InlineKeyboardButton('Вернуться к категориям', callback_data='back_to_category')
-        row = db_select_song_by_type(type_song=call.data)
-        keyboard = types.InlineKeyboardMarkup()
 
-        for i in row:
-            btn = types.InlineKeyboardButton(i[1], callback_data=i[1])
-            keyboard.add(btn)
+        if len(db_select_song_by_type(type_song=call.data)) % 10 == 0:
+            user_song_data[call.message.chat.id]['pages'] = len(db_select_song_by_type(type_song=call.data)) // 10 
+        else:
+            user_song_data[call.message.chat.id]['pages'] = len(db_select_song_by_type(type_song=call.data)) // 10 + 1
 
-        keyboard.add(btn_back)
-        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=keyboard)
+        user_song_data[call.message.chat.id]['type_song'] = str(call.data)
+        user_song_data[call.message.chat.id]['select_page'] = 1
+        user_song_data[call.message.chat.id]['limit'] = 0
+        song_c = user_song_data[call.message.chat.id]
+        song_all_by_category(call, song_c)
+
+    if call.data == 'next_page':
+        if user_song_data[call.message.chat.id]['select_page'] < user_song_data[call.message.chat.id]['pages']:
+            user_song_data[call.message.chat.id]['select_page'] += 1
+            user_song_data[call.message.chat.id]['limit'] += 10
+            song_c = user_song_data[call.message.chat.id]
+            song_all_by_category(call, song_c)
+        else:
+            pass
+
+    if call.data == 'back_page':
+        if user_song_data[call.message.chat.id]['select_page'] > 1:
+            user_song_data[call.message.chat.id]['select_page'] -= 1
+            user_song_data[call.message.chat.id]['limit'] -= 10
+            song_c = user_song_data[call.message.chat.id]
+            song_all_by_category(call, song_c)
+        elif user_song_data[call.message.chat.id]['select_page'] == 1:
+            pass
 
     if call.data == 'back_to_category':
+        user_song_data[call.message.chat.id]['select_page'] = 1
+        user_song_data[call.message.chat.id]['limit'] = 0
+
         rows = db_select_song_type()
         keyboard = types.InlineKeyboardMarkup()
 
@@ -919,6 +943,8 @@ def list_of_song_by_type1(call):
             keyboard.add(btn_type_song)
 
         bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,reply_markup=keyboard)
+
+    print(user_song_data)
 
 
 # Вывод картинки для Маши
@@ -945,8 +971,7 @@ def Masha_hub(message):
 # Помощь
 @bot.message_handler(func=lambda message: message.text == 'Помощь ❓')
 def help(message):
-    bot.send_message(message.chat.id,
-                     f'ПОМОЩЬ\n\n• Бот создан для облегчения поиска песен из песенника. Для того чтобы найти песню просто введите её название, можно с ошибками но незначительными:)\n\n• Если у вас неожиданно пропало меню или по какой-то причине не оно открылось отправьте боту "Меню" и он его перезапустит.\n\n• В случае если бот не работает должным образом и выдаёт ошибку то вы можете написать администратору (В случае ошибки бот пришлёт на него ссылку) либо оставить отзыв с описанием проблемы.\n\n• Если программой предусмотрено, что у вас недостаточно прав для выполнения определённых функций то бот пришлёт вам ошибку с котиком :)\n\n• Если у вас есть пожелания по поводу улучшения работы бота или вы просто хотите оставить благодарность, то для этого вы можете написать отзыв через соответствующую команду!)')
+    bot.send_message(message.chat.id, f'ПОМОЩЬ\n\n• Бот создан для облегчения поиска песен из песенника. Для того чтобы найти песню просто введите её название, можно с ошибками но незначительными:)\n\n• Если у вас неожиданно пропало меню или по какой-то причине не оно открылось отправьте боту "Меню" и он его перезапустит.\n\n• В случае если бот не работает должным образом и выдаёт ошибку то вы можете написать администратору (В случае ошибки бот пришлёт на него ссылку) либо оставить отзыв с описанием проблемы.\n\n• Если программой предусмотрено, что у вас недостаточно прав для выполнения определённых функций то бот пришлёт вам ошибку с котиком :)\n\n• Если у вас есть пожелания по поводу улучшения работы бота или вы просто хотите оставить благодарность, то для этого вы можете написать отзыв через соответствующую команду!)')
 
 
 # Поиск песни через текст и аудио
@@ -966,7 +991,6 @@ def search_song(message):
                 0]  # Вот тут-то и полный путь до файла (например: voice/file_2.oga)
             fname = os.path.basename(path)  # Преобразуем путь в имя файла (например: file_2.oga)
             fname = f'audio_record//{fname}'
-            print(fname)
             doc = requests.get('https://api.telegram.org/file/bot{0}/{1}'.format(TOKEN,
                                                                                  file_info.file_path))  # Получаем и сохраняем присланную голосвуху (Ага, админ может в любой момент отключить удаление айдио файлов и слушать все, что ты там говоришь. А представь, что такую бяку подселят в огромный чат и она будет просто логировать все сообщения [анонимность в телеграмме, ахахаха])
 
@@ -1007,12 +1031,12 @@ def search_song(message):
                 ydisk.remove(f'GuitarBOT_log/Log_record/{str(datetime.date.today())}_error.log', permanently=True)
                 ydisk.upload(f'audio_record/{str(datetime.date.today())}_error.log',
                          f'GuitarBOT_log/Log_record/{str(datetime.date.today())}_error.log')
-            
+
             error(message=message)
 
         finally:
             os.remove(f'{fname}.wav')
-            os.removef(f'{fname}.oga')
+            os.remove(f'{fname}.oga')
 
 
 # Вывод текста песни через кнопку
