@@ -46,7 +46,7 @@ import threading
 
 
 TOKEN = os.environ["BOT_TOKEN"]
-YANDEX_TOKEN = os.eviron["YANDEX_TOKEN"]
+YANDEX_TOKEN = os.environ["YANDEX_TOKEN"]
 
 ydisk = yadisk.YaDisk(token=YANDEX_TOKEN)
 telebot.apihelper.ENABLE_MIDDLEWARE = True
